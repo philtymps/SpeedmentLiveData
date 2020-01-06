@@ -1,6 +1,6 @@
 package com.speedment.livedata.global;
 
-
+// constants
 public class LiveDataConsts {
 
 	public	static	final String	LIVEDATA_BEGINTABLE_IDENTIFIER = "--BEGINTABLE--";

@@ -15,7 +15,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-// Used to Encrypt/Decrypt Properties and Encrypted Columns...
 public class LiveDataEncrypter {
 
 	public final static String	ENCRYPTION_PASSWORD = "speedment";
