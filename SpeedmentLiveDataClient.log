@@ -1,0 +1,127 @@
+INFO    2020-01-06 17:04:02,315 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - this is a information log message
+WARN    2020-01-06 17:04:02,317 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - this is a warning log message
+INFO    2020-01-06 17:04:02,326 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - KAFKA PROPERTIES USED TO CONNECT TO KAFKA TOPIC: 
+INFO    2020-01-06 17:04:02,326 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - auto.offset.reset=earliest
+INFO    2020-01-06 17:04:02,327 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - bootstrap.servers=diab191.tympsnet.com:9092
+INFO    2020-01-06 17:04:02,328 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - topic=speedment-topic
+INFO    2020-01-06 17:04:02,328 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - enabled=true
+INFO    2020-01-06 17:04:02,328 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - enable.auto.commit=false
+INFO    2020-01-06 17:04:02,328 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - group.id=SPEEDMENT-A
+INFO    2020-01-06 17:04:02,411 [main] org.apache.kafka.clients.consumer.ConsumerConfig  - ConsumerConfig values: 
+	allow.auto.create.topics = true
+	auto.commit.interval.ms = 5000
+	auto.offset.reset = earliest
+	bootstrap.servers = [diab191.tympsnet.com:9092]
+	check.crcs = true
+	client.dns.lookup = default
+	client.id = 
+	client.rack = 
+	connections.max.idle.ms = 540000
+	default.api.timeout.ms = 60000
+	enable.auto.commit = false
+	exclude.internal.topics = true
+	fetch.max.bytes = 52428800
+	fetch.max.wait.ms = 500
+	fetch.min.bytes = 1
+	group.id = SPEEDMENT-A
+	group.instance.id = null
+	heartbeat.interval.ms = 3000
+	interceptor.classes = []
+	internal.leave.group.on.close = true
+	isolation.level = read_uncommitted
+	key.deserializer = class org.apache.kafka.common.serialization.StringDeserializer
+	max.partition.fetch.bytes = 1048576
+	max.poll.interval.ms = 300000
+	max.poll.records = 500
+	metadata.max.age.ms = 300000
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	partition.assignment.strategy = [class org.apache.kafka.clients.consumer.RangeAssignor]
+	receive.buffer.bytes = 65536
+	reconnect.backoff.max.ms = 1000
+	reconnect.backoff.ms = 50
+	request.timeout.ms = 30000
+	retry.backoff.ms = 100
+	sasl.client.callback.handler.class = null
+	sasl.jaas.config = null
+	sasl.kerberos.kinit.cmd = /usr/bin/kinit
+	sasl.kerberos.min.time.before.relogin = 60000
+	sasl.kerberos.service.name = null
+	sasl.kerberos.ticket.renew.jitter = 0.05
+	sasl.kerberos.ticket.renew.window.factor = 0.8
+	sasl.login.callback.handler.class = null
+	sasl.login.class = null
+	sasl.login.refresh.buffer.seconds = 300
+	sasl.login.refresh.min.period.seconds = 60
+	sasl.login.refresh.window.factor = 0.8
+	sasl.login.refresh.window.jitter = 0.05
+	sasl.mechanism = GSSAPI
+	security.protocol = PLAINTEXT
+	send.buffer.bytes = 131072
+	session.timeout.ms = 10000
+	ssl.cipher.suites = null
+	ssl.enabled.protocols = [TLSv1.2, TLSv1.1, TLSv1]
+	ssl.endpoint.identification.algorithm = https
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLS
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+	value.deserializer = class org.apache.kafka.common.serialization.StringDeserializer
+
+WARN    2020-01-06 17:04:02,783 [main] org.apache.kafka.clients.consumer.ConsumerConfig  - org.slf4j.helpers.FormattingTuple@1990a65e
+WARN    2020-01-06 17:04:02,783 [main] org.apache.kafka.clients.consumer.ConsumerConfig  - org.slf4j.helpers.FormattingTuple@64485a47
+INFO    2020-01-06 17:04:02,785 [main] org.apache.kafka.common.utils.AppInfoParser  - org.slf4j.helpers.FormattingTuple@1786f9d5
+INFO    2020-01-06 17:04:02,786 [main] org.apache.kafka.common.utils.AppInfoParser  - org.slf4j.helpers.FormattingTuple@704d6e83
+INFO    2020-01-06 17:04:02,786 [main] org.apache.kafka.common.utils.AppInfoParser  - org.slf4j.helpers.FormattingTuple@43a0cee9
+INFO    2020-01-06 17:04:02,789 [main] org.apache.kafka.clients.consumer.KafkaConsumer  - org.slf4j.helpers.FormattingTuple@5c072e3f
+INFO    2020-01-06 17:04:02,792 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Enter Q or q to end...
+INFO    2020-01-06 17:04:02,792 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Connecting to DB...
+INFO    2020-01-06 17:04:03,000 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Beginning Polling of Kafka Topic: speedment-topic
+INFO    2020-01-06 17:04:03,417 [main] org.apache.kafka.clients.Metadata  - org.slf4j.helpers.FormattingTuple@702657cc
+INFO    2020-01-06 17:04:03,439 [main] org.apache.kafka.clients.consumer.internals.AbstractCoordinator  - org.slf4j.helpers.FormattingTuple@6025e1b6
+INFO    2020-01-06 17:04:03,442 [main] org.apache.kafka.clients.consumer.internals.ConsumerCoordinator  - org.slf4j.helpers.FormattingTuple@7586beff
+INFO    2020-01-06 17:04:03,443 [main] org.apache.kafka.clients.consumer.internals.AbstractCoordinator  - org.slf4j.helpers.FormattingTuple@3b69e7d1
+INFO    2020-01-06 17:04:03,633 [main] org.apache.kafka.clients.consumer.internals.AbstractCoordinator  - org.slf4j.helpers.FormattingTuple@229f66ed
+INFO    2020-01-06 17:04:03,758 [main] org.apache.kafka.clients.consumer.internals.AbstractCoordinator  - org.slf4j.helpers.FormattingTuple@1e800aaa
+INFO    2020-01-06 17:04:03,762 [main] org.apache.kafka.clients.consumer.internals.ConsumerCoordinator  - org.slf4j.helpers.FormattingTuple@198b6731
+INFO    2020-01-06 17:04:03,856 [main] org.apache.kafka.clients.consumer.internals.ConsumerCoordinator  - org.slf4j.helpers.FormattingTuple@5e5d171f
+INFO    2020-01-06 17:04:05,712 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Polling returned 1 records...
+INFO    2020-01-06 17:04:05,713 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --BEGINTABLE-- State = 0 Task Id=SPEEDMENT-INVENTORY-10
+INFO    2020-01-06 17:04:05,713 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Processed 1 Records Successfullly...
+INFO    2020-01-06 17:04:05,713 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Polling......
+INFO    2020-01-06 17:04:05,839 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Polling returned 96 records...
+INFO    2020-01-06 17:04:05,847 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --ENDTABLE-- State = 2 Task Id=YFS_INVENTORY_ITEM
+INFO    2020-01-06 17:04:05,910 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --BEGINTABLE-- State = 2 Task Id=SPEEDMENT-INVENTORY-20
+INFO    2020-01-06 17:04:05,980 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --ENDTABLE-- State = 2 Task Id=YFS_INVENTORY_SUPPLY
+INFO    2020-01-06 17:04:06,036 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --BEGINTABLE-- State = 2 Task Id=SPEEDMENT-INVENTORY-30
+INFO    2020-01-06 17:04:06,041 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --ENDTABLE-- State = 2 Task Id=YFS_INVENTORY_DEMAND
+INFO    2020-01-06 17:04:06,098 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Processed 96 Records Successfullly...
+INFO    2020-01-06 17:04:06,099 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Polling......
+INFO    2020-01-06 17:04:06,105 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Polling returned 25 records...
+INFO    2020-01-06 17:04:06,105 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --BEGINTABLE-- State = 2 Task Id=SPEEDMENT-ITEMS-10
+INFO    2020-01-06 17:04:06,106 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --ENDTABLE-- State = 2 Task Id=YFS_ITEM
+INFO    2020-01-06 17:04:06,162 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --BEGINTABLE-- State = 2 Task Id=SPEEDMENT-ORDERS-10
+INFO    2020-01-06 17:04:06,175 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --ENDTABLE-- State = 2 Task Id=YFS_ORDER_HEADER
+INFO    2020-01-06 17:04:06,233 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --BEGINTABLE-- State = 2 Task Id=SPEEDMENT-ORDERS-20
+INFO    2020-01-06 17:04:06,233 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Processed 25 Records Successfullly...
+INFO    2020-01-06 17:04:06,233 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Polling......
+INFO    2020-01-06 17:04:06,236 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Polling returned 6 records...
+INFO    2020-01-06 17:04:06,247 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Identifier: --ENDTABLE-- State = 2 Task Id=YFS_ORDER_LINE
+INFO    2020-01-06 17:04:06,305 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Processed 6 Records Successfullly...
+INFO    2020-01-06 17:04:06,305 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Polling......
+INFO    2020-01-06 17:04:16,305 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Initiating Shutdown...
+INFO    2020-01-06 17:04:16,307 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Shutdown Gracefully...Please Wait...
+INFO    2020-01-06 17:04:16,318 [main] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Writing to Properties File...speedment-tables.properties
+INFO    2020-01-06 17:04:16,318 [main] org.apache.kafka.clients.consumer.internals.AbstractCoordinator  - org.slf4j.helpers.FormattingTuple@69fb6037
+INFO    2020-01-06 17:04:16,400 [Thread-0] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Terminating Speedment Live Data Consumer...
+INFO    2020-01-06 17:04:16,400 [Thread-0] com.speedment.livedata.client.LiveDataKafkaToDBClient  - Exiting...

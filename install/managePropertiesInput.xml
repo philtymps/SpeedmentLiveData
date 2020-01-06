@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<MultiApi>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.enabled" PropertyValue="true" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.enabled" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.topic" PropertyValue="speedment-topic" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.topic" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.bootstrap.servers" PropertyValue="[KAFKA-HOST]:9092" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.bootstrap.servers" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.transactional.id" PropertyValue="SPEEDMENT_LIVE_DATA.2001.ex" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.transactional.id" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.enabled" PropertyValue="false" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.enabled" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBType" PropertyValue="DB2" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBType" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBServer" PropertyValue="[DBSERVER]" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBServer" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBPort" PropertyValue="[DBPORT]" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBPort" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DSTDatabase" PropertyValue="OMDB" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DSTDatabase" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBSchema" PropertyValue="OMDB" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBSchema" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBUsername" PropertyValue="[DBUSER]" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBUsername" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBPassword" PropertyValue="[DBPASS]" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBPassword" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.urlencoded.columns" PropertyValue="ITEM_DESCRIPTION,ITEM_SHORT_DESCRIPTION,SHORT_DESCRIPTION,DESCRIPTION,EXTENDED_DESCRIPTION" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.urlencoded.columns" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+</MultiApi>
