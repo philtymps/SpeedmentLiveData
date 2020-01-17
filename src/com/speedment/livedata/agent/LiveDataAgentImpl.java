@@ -50,6 +50,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		  
 	  private 		Hashtable<String, Object>	m_Properties;
 	  private		Producer<String, String>	m_KafkaProducer;
+	  private		Properties					m_KafkaProperties;
 	  private		boolean						m_bInKafkaTransaction;
 
 	  // logger instance
@@ -61,14 +62,14 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		m_Properties = new Hashtable<String, Object>();
 		m_KafkaProducer = null;
 		m_bInKafkaTransaction = false;
+		m_KafkaProperties = null;
 	  }
 
-	  public	Producer <String, String>getKafkaProducer ()
+	  public	Producer <String, String>getKafkaProducer () throws Exception
 	  {
 		  if (m_KafkaProducer == null)
 		  {
-			Properties 				 kafkaProps = initializeKafkaProperties();
-			m_KafkaProducer = new KafkaProducer<>(kafkaProps, new StringSerializer(), new StringSerializer());
+			m_KafkaProducer = new KafkaProducer<>(m_KafkaProperties, new StringSerializer(), new StringSerializer());
 		  }
 		  return m_KafkaProducer;
 	  }
@@ -97,7 +98,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 
 
 		  try {
-			if (getProperty("TaskId").equals ("SPEEDMENT-RESET"))
+			if (((String)getProperty("TaskId")).contains ("RESET"))
 			{
 				resetRunningOrPendingJobs (env, YFCDocument.getDocumentFor(inXML).getDocumentElement());
 				return null;
@@ -116,6 +117,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			{
 				while (iDataExtractConfig.hasNext())
 				{
+					@SuppressWarnings("unused")
 					YFCDocument	docDataExtrConfig = YFCDocument.createDocument ("DataExtractConfigList");
 					YFCElement	eleJobXML = (YFCElement)iDataExtractConfig.next();
 
@@ -161,8 +163,8 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		} catch (Exception e) {
 			if (IsDebugging())
 			{
-				logger.debug ("Exception in getJobs() Method:");
-				logger.debug ("Exception Class: " + e.getClass() + ": " + e.getMessage());
+				logger.info ("Exception in getJobs() Method:");
+				logger.info ("Exception Class: " + e.getClass() + ": " + e.getMessage());
 			}
 			throw new Exception (e.getMessage());
 		}
@@ -179,13 +181,15 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				logger.debug (YFCDocument.getDocumentFor (inXML).getString());
 		  }
 
+/*
 		  // Registering a shutdown hook so we can exit cleanly
 		  final Thread mainThread = Thread.currentThread();
-		  Runtime.getRuntime().addShutdownHook(new Thread() {
+		  Thread	shutdownThread;
+		  Runtime.getRuntime().addShutdownHook(shutdownThread = new Thread() {
 				public void run() {
 					try {
 						mainThread.join();
-						logger.info("LiveDataAgent Being Shut Down...Completed Running or Pending Job: " + getProperty ("TaskId"));
+						logger.info("LiveDataAgent Completed Running Job: " + getProperty ("TaskId"));
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					} catch (Exception e) {
@@ -193,7 +197,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 					}
 				}
 		  });
-		  
+*/
 		  
 		  initDefaultPropertiesForAgent (env, inXML);
 		  try {
@@ -268,14 +272,19 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				logger.debug ("Exiting executeJobs.  Status=" + sStatus);
 
 		} catch (Exception e) {
-			if (IsKafkaEnabled () && getInKafkaTransaction())
+			if (IsKafkaEnabled () && m_KafkaProducer != null)
 			{
-				getKafkaProducer().abortTransaction();
+				if (getInKafkaTransaction())
+					getKafkaProducer().abortTransaction();
+				getKafkaProducer().close();
 			}
+			// attempt to clean up pending jobs 
+			cleanupPendingJobs (env);
+			
 			if (IsDebugging())
 			{
-				logger.debug ("Exception in executeJobs() Method:");
-				logger.debug ("Exception Class = " + e.getClass() +" " + e.getMessage());
+				logger.info ("Exception in executeJobs() Method:");
+				logger.info ("Exception Class = " + e.getClass() +" " + e.getMessage());
 			}
 			throw new Exception (e.getMessage());
 		}
@@ -334,7 +343,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			String		sHeaderToSend = LiveDataConsts.LIVEDATA_BEGINTABLE_IDENTIFIER + "," + eleJobXML.getAttribute("DataExtractConfigKey") + "," + sTableName + "," + sColumns;
 			// send the table information first (DataExractConfigKey, Table, Columns)
 			if (IsKafkaEnabled())
-				kafkaProducer.send(new ProducerRecord<>(eleJobXML.getAttribute("KafkaTopic"), Long.toString(System.currentTimeMillis()), sHeaderToSend));
+				kafkaProducer.send(new ProducerRecord<>(eleJobXML.getAttribute("speedment.producer.kafka.topic"), Long.toString(System.currentTimeMillis()), sHeaderToSend));
 
 			StringBuilder sSQL = new StringBuilder("SELECT " + sColumns + ",MODIFYTS FROM " + sTableName);
 			sSQL.append(" WHERE MODIFYTS BETWEEN '" + tsBetweenStart.toString() + "' AND '" + tsBetweenEnd.toString() + "' ORDER BY MODIFYTS");
@@ -382,7 +391,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 					if (IsKafkaEnabled ())
 					{
 						sProducerKeyValue= sTableName + "-" + sProducerKeyValue;
-						kafkaProducer.send(new ProducerRecord<>(eleJobXML.getAttribute("KafkaTopic"), sProducerKeyValue, sRecordToSend.toString()));
+						kafkaProducer.send(new ProducerRecord<>(eleJobXML.getAttribute("speedment.producer.kafka.topic"), sProducerKeyValue, sRecordToSend.toString()));
 					}
 					if (IsDBEnabled())
 						manageDstDataRecord (conDstDB, eleJobXML, sProducerKeyName, sProducerKeyValue, sRecordToSend.toString());
@@ -395,7 +404,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			String sFooterToSend = LiveDataConsts.LIVEDATA_ENDTABLE_IDENTIFIER + "," + sTableName + "," + lTotalRecords;
 
 			if (IsKafkaEnabled())
-				kafkaProducer.send(new ProducerRecord<>(eleJobXML.getAttribute("KafkaTopic"), Long.toString(System.currentTimeMillis()), sFooterToSend));
+				kafkaProducer.send(new ProducerRecord<>(eleJobXML.getAttribute("speedment.producer.kafka.topic"), Long.toString(System.currentTimeMillis()), sFooterToSend));
 			if (IsDBEnabled())
 				conDstDB.commit();
 			
@@ -517,27 +526,59 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		return (sHrs + ":" + sMins + ":" + sSecs);
 	  }
 
-	  protected Properties	initializeKafkaProperties ()
+	  protected Properties initializeKafkaProperties (YFSEnvironment env, String sTaskId) throws Exception
 	  {
-		Properties	kafkaProps = new Properties();
+		Properties propCustomerOverrides = new Properties();
+		propCustomerOverrides.load(getClass().getResourceAsStream(LiveDataConsts.LIVEDATA_CUSTOMER_OVERRIDES));
+		String		sKafkaPropPrefix = "yfs.speedment.producer.kafka.";
+		Enumeration<?>	enumPropNames = propCustomerOverrides.propertyNames();
 
-		// since we're using transactional delivery we must set these properties
-		kafkaProps.put("bootstrap.servers", (String)getProperty ("KafkaServers"));
-		kafkaProps.put("transactional.id",  (String)getProperty ("TaskId"));
+		m_KafkaProperties = new Properties();
+		while (enumPropNames.hasMoreElements())
+		{
+			String	sPropName = (String)enumPropNames.nextElement();
+			if (sPropName.contains(sKafkaPropPrefix))
+			{
+				// strip off the category "yfs."
+				String	sSystemPropName = sPropName.substring(4);
+				String	sSystemPropValue;
+				if (!YFCObject.isVoid(sSystemPropValue = getSystemParameter (env, sSystemPropName, sSystemPropName)))
+					m_KafkaProperties.setProperty(sPropName.substring(sKafkaPropPrefix.length()), sSystemPropValue);
+			}
+		}
+		// set transactional id to the task id
+		m_KafkaProperties.setProperty("transactional.id", sTaskId);
+		if (IsDebugging())
+		{
+			logger.debug ("KAFKA PROPERTIES USED TO CONNECT TO KAFKA TOPIC: ");
+			debugProperties(m_KafkaProperties);
+		}
 
-		// these properties below are if here if we decided against using transactional delivery
-		/*
-		 *
-			kafkaProps.put("acks", "all");
-			kafkaProps.put("retries", 0);
-			kafkaProps.put("batch.size", 16384);
-			kafkaProps.put("linger.ms", 1);
-			kafkaProps.put("buffer.memory", 33554432);
-			kafkaProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-			kafkaProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		 */
+		return m_KafkaProperties;
+	  }
 
-		return kafkaProps;
+	  public	void debugProperties (Properties pProps)
+	  {
+		Enumeration<?>	enumPropNames = pProps.propertyNames();
+		LiveDataEncrypter	ldkEncrypter = new LiveDataEncrypter ();
+		while (enumPropNames.hasMoreElements())
+		{
+			String	sPropName = (String)enumPropNames.nextElement();
+			String	sPropValue = pProps.getProperty(sPropName);
+			if (sPropValue.startsWith(LiveDataConsts.LIVEDATA_ENCRYPTER_PREFIX))
+			{
+				sPropValue = ldkEncrypter.decryptIfEncrypted(sPropValue);
+				if (sPropValue.length() > 4)
+				{
+					StringBuilder sMaskedProperty = new StringBuilder();
+					for (int iMaskedTotalLength = 0; iMaskedTotalLength < sPropValue.length()-4; iMaskedTotalLength++)
+						 sMaskedProperty.append('*');
+					sMaskedProperty.append(sPropValue.substring(sPropValue.length() - 4));
+					sPropValue = sMaskedProperty.toString();
+				}
+			}
+			logger.debug (sPropName + "=" + sPropValue);
+		}
 	  }
 
 	  protected boolean	initializeJobInDB (YFSEnvironment env, YFCElement eleJobXML, String sTransactionId) throws Exception
@@ -709,7 +750,9 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			do {
 				// calculate the run until time which will be upper range of the ModifiedTS used.
 				// Using the frequency values will ensure we're always processing those records modified up to
-				// but not past a given interval.  e.g. if configured interval is 5 minutes the upper range
+				// but not past a given interval.  
+				
+				// e.g. if configured interval is 5 minutes the upper range
 				// will be a multiple of 5 minutes (i.e. 5, 10, 15) from NOW depending on the last time the job was
 				// last run.
 				lNewRunUntil = lRunUntil + (lFrequencyInHours * 60L * 60L * 1000L) + (lFrequencyInMins * 60L * 1000L);
@@ -757,8 +800,8 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 						{
 							logger.info (sCurrentDateTime + ": Task Is Already Pending or Running, or Is Before Next Scheduled Start Date: " + sTaskId);
 						}
-						else
-							logger.info((sCurrentDateTime + ": A Pending Task has been Reset Due to Shutdown - " + rsCfgDetail.getByte("TASK_ID")));
+						else if (IsDebugging())
+							logger.info((sCurrentDateTime + ": A Pending Task has been Reset Due to Shutdown - " + rsCfgDetail.getString("TASK_ID")));
 						bRet=true;
 						break;
 					}
@@ -908,7 +951,8 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				{
 					StringBuilder sSQL = new StringBuilder();
 					
-					while (!sDBAction.equalsIgnoreCase("NONE")) {
+					while (!sDBAction.equalsIgnoreCase("NONE")) 
+					{
 						// DBAction can be one of DELETE, DROP, CREATE, DROPANDCREATE or NONE
 						if (sDBAction.equalsIgnoreCase("DELETE"))
 						{
@@ -976,7 +1020,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 					// send the following reset message SPEEDMENT-RESET,DBACTION,TABLE_NAME,TABLE_COLUMNS_AND_LENGTHS
 					getKafkaProducer().beginTransaction();
 					setInKafkaTransaction(true);
-					getKafkaProducer().send(new ProducerRecord<>((String)getProperty("KafkaTopic"), Long.toString(System.currentTimeMillis()), sRecordToSend));
+					getKafkaProducer().send(new ProducerRecord<>((String)getProperty("speedment.producer.kafka.topic"), Long.toString(System.currentTimeMillis()), sRecordToSend));
 					getKafkaProducer().commitTransaction();
 					setInKafkaTransaction(false);
 				}
@@ -1012,7 +1056,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 	  {
 			Connection					conDB = ((YCPContext)env).getDBConnection();
 
-			// PHASE I = Update YFS_DATA_EXTR_CFG Table RUNNING STATUSES and NEXT_RUN/NEXT_STARTTS
+			// PHASE I = Update YFS_DATA_EXTR_CFG Table RUNNING STATUSES
 			try {
 				String sSql = "SELECT DATA_EXTR_CFG_KEY, TASK_ID, TABLE_NAME, RUNNING_STATUS, NEXT_RUN, NEXT_STARTTS FROM YFS_DATA_EXTR_CFG FOR UPDATE";
 				PreparedStatement ps = conDB.prepareStatement(sSql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT);
@@ -1022,7 +1066,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				{
 					String	sStatus = rsCfgDetail.getString("RUNNING_STATUS");
 					boolean	bUpdateRow = false;
-					if(!IsPendingStatus (sStatus))
+					if(IsPendingStatus (sStatus))
 					{
 						rsCfgDetail.updateString ("RUNNING_STATUS", LiveDataConsts.LIVEDATA_RESET);
 						bUpdateRow = true;
@@ -1034,10 +1078,11 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				}
 				ps.close();
 				rsCfgDetail.close();
+				conDB.commit();
 			} catch (Exception e) {
 				if (IsDebugging())
 				{
-					logger.info ("Exception in cleanupRunningJobs: " + e.getClass() + " " + e.getMessage());
+					logger.info ("Exception in PHASE I cleanupPendingJobs: " + e.getClass() + " " + e.getMessage());
 				}
 			}
 			
@@ -1063,7 +1108,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				conDB.commit();
 			} catch (Exception e) {
 				 if (IsDebugging())
-					 logger.info ("Exception in PHASE II cleanupRunningJobs: " + e.getClass() + " " + e.getMessage());
+					 logger.info ("Exception in PHASE II cleanupPendingJobs: " + e.getClass() + " " + e.getMessage());
 			}
 	  }
 	  
@@ -1102,12 +1147,12 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			
 			getSystemParameter (env, "speedment.urlencoded.columns", "URLEncodedColumns", "");
 			
-			if (Boolean.valueOf(getSystemParameter (env, "speedment.producer.kafka.enabled", "IsKafkaEnabled", "true")))
+			if (Boolean.valueOf(getSystemParameter (env, "speedment.producer.kafka.enabled", "IsKafkaEnabled", "false")))
 			{
-				getSystemParameter(env, "speedment.producer.kafka.bootstrap.servers", "KafkaServers", LiveDataConsts.LIVEDATA_DEFAULT_KAFKA_SERVERS);
-				getSystemParameter(env, "speedment.producer.kafka.topic", "KafkaTopic", LiveDataConsts.LIVEDATA_DEFAULT_KAFKA_TOPIC);		
+				if (m_KafkaProperties == null)
+					initializeKafkaProperties(env, (String)getProperty ("TaskId"));
 			}
-				
+			
 			if (Boolean.valueOf(getSystemParameter (env, "speedment.producer.database.enabled", "IsDBEnabled", "false")))
 			{
 				getSystemParameter(env, "speedment.producer.database.DstDBServer", "DstDBServer");
@@ -1146,20 +1191,6 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				  logger.info ("Exception in getSuggestedColumnWidth: " + e.getClass() + " " + e.getMessage());
 	  	  }
 		  return iMaxColLength;
-/*
-	      int count = 0; 
-
-	      // round up the longest table column to the nearest power of 2
-	      if (iMaxColLength > 0 && (iMaxColLength & (iMaxColLength - 1)) == 0) 
-	    	  return iMaxColLength; 
-	  
-	      while(iMaxColLength != 0) 
-	      {
-	    	  iMaxColLength >>= 1; 
-			  count += 1; 
-	      } 
-	      return 1 << count;
-*/ 
 	  }
 
 	  protected boolean IsDebugging ()
@@ -1257,21 +1288,11 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		while (enumPropNames.hasMoreElements())
 		{
 			String	sPropName = (String)enumPropNames.nextElement();
-			m_Properties.put(sPropName, props.get(sPropName));
+			m_Properties.put(sPropName, props.getProperty(sPropName));
 		}
 	  }
 
 	  
-	  public	void setProperties (Hashtable<String, Object> htProps)
-	  {
-		Enumeration<String>	enumPropNames = htProps.keys();
-		while (enumPropNames.hasMoreElements())
-		{
-			String	sPropName = enumPropNames.nextElement();
-			m_Properties.put(sPropName, htProps.get(sPropName));
-		}
-	  }
-
 	  public void setProperty(String sProp, Object sValue)
 	  {
 		m_Properties.put(sProp, sValue);

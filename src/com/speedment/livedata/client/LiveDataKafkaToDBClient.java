@@ -24,17 +24,15 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.log4j.xml.DOMConfigurator;
 
-import com.speedment.livedata.agent.LiveDataAgentImpl;
+//import org.apache.log4j.BasicConfigurator;
+//import org.apache.log4j.Level;
+//import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.Logger;
+
 import com.speedment.livedata.encrypter.LiveDataEncrypter;
 import com.speedment.livedata.global.LiveDataConsts;
-import com.yantra.yfc.log.YFCLogCategory;
-
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -57,6 +55,7 @@ public class LiveDataKafkaToDBClient {
 	private boolean		m_bSaveMessagesToFile;
 	private	FileWriter	m_FileWriter = null;
 	private KafkaConsumer<String, String> m_KafkaConsumer = null;
+	private Connection	m_ConDstDB = null;
 	
 	// logger
 	static Logger logger = Logger.getLogger(com.speedment.livedata.client.LiveDataKafkaToDBClient.class);
@@ -68,25 +67,26 @@ public class LiveDataKafkaToDBClient {
     	m_TableProperties = new Properties();
     	m_bVerbose = false;
     	m_KafkaConsumer = null;
+    	m_ConDstDB = null;
     }
     
     @SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {
 		String 		props = LiveDataConsts.LIVEDATA_DEFAULT_PROPERTIES_FILE_NAME;
 		String 		saveFile = null;
-		Connection	conDstDB = null;
 		int			state = LiveDataConsts.LIVEDATA_STATE_STARTING;
 		
-		final LiveDataKafkaToDBClient ldkToDB = new LiveDataKafkaToDBClient();
-		final LiveDataEncrypter ldkEncrypter = new LiveDataEncrypter();
+		final LiveDataKafkaToDBClient	ldkToDB = new LiveDataKafkaToDBClient();
+		final LiveDataEncrypter			ldkEncrypter = new LiveDataEncrypter();
 
+/*		LOG4J initialization - uses properties embedded in the speedment-livedata-client.properties file now
 		String log4jConfigFile = System.getProperty("user.dir")
                 + File.separator + LiveDataConsts.LIVEDATA_DEFAULT_LOG4J_FILE_NAME;
-//		BasicConfigurator.configure();
-//		PropertyConfigurator.configure(log4jConfigFile);
-//		logger.setLevel(Level.toLevel(System.getProperty("log4j.rootLogger")));
-//		DOMConfigurator.configure(log4jConfigFile);
-
+		BasicConfigurator.configure();
+		PropertyConfigurator.configure(log4jConfigFile);
+		logger.setLevel(Level.toLevel(System.getProperty("log4j.rootLogger")));
+		DOMConfigurator.configure(log4jConfigFile);
+*/
 		//		String password = System.getProperty("encryptionPassword");
 		ldkToDB.setVerboseFlag(false);
 		for (int i = 0; i < args.length; i++) {
@@ -138,12 +138,7 @@ public class LiveDataKafkaToDBClient {
 			// load the properties file and decrypt database password property 
 			ldkToDB.loadPropertiesFromFile(props);
 			ldkToDB.getProperties().setProperty("speedment.consumer.database.DstDBPassword", ldkEncrypter.decryptIfEncrypted(ldkToDB.getProperties().getProperty("speedment.consumer.database.DstDBPassword")));
-			
-	        logger.debug("this is a debug log message");
-	        logger.info("this is a information log message");
-	        logger.warn("this is a warning log message");
-	        
-			
+						
 			// initialize log4j basic mode
 			final Thread mainThread = Thread.currentThread();
 
@@ -151,12 +146,17 @@ public class LiveDataKafkaToDBClient {
 			Runtime.getRuntime().addShutdownHook(new Thread() {
         	public void run() {
         		// Note that shutdownhook runs in a separate thread, so the only thing we can safely do to a consumer is wake it up
-        		ldkToDB.getKafkaConsumer().wakeup();
+        		if (ldkToDB.getKafkaConsumer() != null)
+        			ldkToDB.getKafkaConsumer().wakeup();
         		logger.info ("Terminating Speedment Live Data Consumer...");
         		try {
         			mainThread.join();
+        			shutdown(ldkToDB);
             		logger.info ("Exiting...");
         		} catch (InterruptedException e) {
+        			e.printStackTrace();
+        		}
+        		catch (Exception e) {
         			e.printStackTrace();
         		}
         	}
@@ -178,12 +178,12 @@ public class LiveDataKafkaToDBClient {
 	        		logger.info ("Connecting to DB...");
 	        	
 	        	// get the database connection and set auto-commit off
-	        	if ((conDstDB = ldkToDB.getDSTConnection()) == null)
+	        	if (ldkToDB.getDSTConnection() == null)
 	        	{
 					logger.info ("Database Connection Failure: " + ldkToDB.getDBURL());
 					throw (new Exception("Database Connection Failure:"));
 	        	}
-				conDstDB.setAutoCommit(false);
+				ldkToDB.getDSTConnection().setAutoCommit(false);
 			}
             // looping until ctrl-c, the shutdown hook will cleanup on exit
             String							sTableName = null;
@@ -212,14 +212,13 @@ public class LiveDataKafkaToDBClient {
                 	String			sRecord = ldkToDB.prepareRecordForSQL (record.value());
                 	int				iExpectedCount = records.count();
                 	List<String>	lstRecordValues = Arrays.asList (sRecord.split("\\s*,\\s*"));
-                	String			sTaskId = lstRecordValues.get(1);
                 	boolean			bCanCommit = false;
                 	
                 	// get key identifier if any
                 	sKeyIdentifier = lstRecordValues.get(0);
                 	  	
                 	if (ldkToDB.IsKeyIdentifier(sKeyIdentifier) && ldkToDB.getVerboseFlag())
-                		logger.info ("Identifier: " + sKeyIdentifier + " State = " + state + " Task Id=" + sTaskId);
+                		logger.info ("Identifier: " + sKeyIdentifier + " State = " + state + " Task Id=" + lstRecordValues.get(1));
 
                 	if (state == LiveDataConsts.LIVEDATA_STATE_WRITING_FILE || state == LiveDataConsts.LIVEDATA_STATE_FLUSH_KAFKA)
                 	{
@@ -244,7 +243,7 @@ public class LiveDataKafkaToDBClient {
                 	else if (sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_RESET_IDENTIFIER))
             		{
             			if (ldkToDB.IsDBEnabled())
-            				bCanCommit = ldkToDB.processResetMessage (conDstDB, lstRecordValues);
+            				bCanCommit = ldkToDB.processResetMessage (lstRecordValues);
             		}
                 	else
                 	{
@@ -252,7 +251,7 @@ public class LiveDataKafkaToDBClient {
             			sTableName = sRecordKey.substring(0, sRecordKey.indexOf('-'));
             			sTableColumns = ldkToDB.getTableProperty(sTableName);
             			lstTableColumns = Arrays.asList (sTableColumns.split("\\s*,\\s*"));
-            			if (!ldkToDB.processDstDataRecord (conDstDB, sTableName, sTableColumns, lstTableColumns, lstRecordValues))
+            			if (!ldkToDB.processDstDataRecord (sTableName, sTableColumns, lstTableColumns, lstRecordValues))
             				break ConsumerRecordLoop;
                 	}
                 	iRecordsProcessed++;
@@ -268,7 +267,7 @@ public class LiveDataKafkaToDBClient {
                     	// perform the db commit first
                     	if (ldkToDB.IsDBEnabled() && 
                     	  !(state == LiveDataConsts.LIVEDATA_STATE_WRITING_FILE || state == LiveDataConsts.LIVEDATA_STATE_FLUSH_KAFKA))
-                    		conDstDB.commit();
+                    		ldkToDB.getDSTConnection().commit();
             			// perform the kafka commit next - at this point database and kafka topic are in synch
             			if (ldkToDB.IsKafkaEnabled())
                     		ldkToDB.commitKafkaConsumer ();
@@ -299,22 +298,25 @@ public class LiveDataKafkaToDBClient {
         		e.printStackTrace();
         } catch (Exception e) {
         	logger.info (e.getMessage());
-        } finally {
-			// save the table properties file
-        	ldkToDB.saveTablePropertiesToFile (LiveDataConsts.LIVEDATA_TABLE_PROPERTIES_FILE_NAME);
-
-			if (ldkToDB.IsSaveFileEnabled())
-				ldkToDB.closeSaveMessageFile();
-
-			if (ldkToDB.IsKafkaEnabled() && ldkToDB.getKafkaConsumer() != null)
-			{
-				ldkToDB.getKafkaConsumer().close();
-			}
-			if (ldkToDB.IsDBEnabled() && conDstDB != null)
-			{
-					conDstDB.close();
-			}
         }
+    }
+    
+    private static void shutdown(LiveDataKafkaToDBClient ldkToDB) throws Exception
+    {
+		// save the table properties file
+    	ldkToDB.saveTablePropertiesToFile (LiveDataConsts.LIVEDATA_TABLE_PROPERTIES_FILE_NAME);
+
+		if (ldkToDB.IsSaveFileEnabled())
+			ldkToDB.closeSaveMessageFile();
+
+		if (ldkToDB.IsKafkaEnabled() && ldkToDB.getKafkaConsumer() != null)
+		{
+			ldkToDB.getKafkaConsumer().close();
+		}
+		if (ldkToDB.IsDBEnabled() && ldkToDB.getDSTConnection() != null)
+		{
+				ldkToDB.getDSTConnection().close();
+		}
     }
 
     protected	boolean	IsKeyIdentifier (String sKeyIdentifier)
@@ -449,7 +451,7 @@ public class LiveDataKafkaToDBClient {
     }
     
     /* ONLY WORKS ON FULLY FUNCTIONAL JDBC DRIVERS
-	protected void	processDstDataRecord (Connection conDstDB, String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstRecordValues) throws Exception
+	protected void	processDstDataRecord (String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstRecordValues) throws Exception
 	{
 		try {
 			// now create a connection to the destination database
@@ -498,25 +500,25 @@ public class LiveDataKafkaToDBClient {
 	 }
      */
     
-    protected boolean	processDstDataRecord (Connection conDstDB, String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstTableValues) throws Exception
+    protected boolean	processDstDataRecord (String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstTableValues) throws Exception
     {
     	if (IsDBEnabled())
-    		return processDstDataRecordV1 (conDstDB, sTableName, sTableColumns, lstTableColumns, lstTableValues);
+    		return processDstDataRecordV1 (sTableName, sTableColumns, lstTableColumns, lstTableValues);
     	else
     		return true;
     }
     
-	protected boolean	processDstDataRecordV1 (Connection conDstDB, String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstTableValues) throws Exception
+	protected boolean	processDstDataRecordV1 (String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstTableValues) throws Exception
 	{
 		boolean	bCanCommit = false;
-		
+
 		try {
 			StringBuilder	sSQL = new StringBuilder();
 			boolean			bRecordExists;
 			int				iTableValuesInitialOffset = 0;
 			List<String>	lstURLEncodedColumns = Arrays.asList(((String)getProperty("speedment.urlencoded.columns")).split ("\\s*,\\s*"));
 
-			if (bRecordExists = checkRecordExists(conDstDB, sTableName, lstTableColumns.get(0), lstTableValues.get(iTableValuesInitialOffset)))
+			if (bRecordExists = checkRecordExists(sTableName, lstTableColumns.get(0), lstTableValues.get(iTableValuesInitialOffset)))
 			{
 				// perform an update
 				sSQL.append("UPDATE " + sTableName);
@@ -575,7 +577,7 @@ public class LiveDataKafkaToDBClient {
 			if (Boolean.valueOf(System.getProperty("SQLDebug")))
 				logger.info (sSQL);
 			// Execute the INSERT or UPDATE
-			Statement	stmt = conDstDB.createStatement();
+			Statement	stmt = getDSTConnection().createStatement();
 			
 			stmt.execute(sSQL.toString());
 			stmt.close();
@@ -662,7 +664,7 @@ public class LiveDataKafkaToDBClient {
 	}
 */
 
-	private	boolean	checkRecordExists (Connection conDstDB, String sTableName, String sPrimaryKeyName, String sPrimaryKeyValue) throws Exception
+	private	boolean	checkRecordExists (String sTableName, String sPrimaryKeyName, String sPrimaryKeyValue) throws Exception
 	{
 		boolean bExists = false;
 		try {
@@ -671,7 +673,7 @@ public class LiveDataKafkaToDBClient {
 			
 			if (Boolean.valueOf(System.getProperty("SQLDebug")))
 				logger.info (sSQL);
-			PreparedStatement	ps = conDstDB.prepareStatement(sSQL, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			PreparedStatement	ps = getDSTConnection().prepareStatement(sSQL, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			ResultSet			rsResults = ps.executeQuery();
 			
 			// perform an update
@@ -685,7 +687,7 @@ public class LiveDataKafkaToDBClient {
 		return bExists;
 	}
 	
-    public	boolean processResetMessage (Connection conDstDB, List<String> lstTableToReset) throws Exception
+    public	boolean processResetMessage (List<String> lstTableToReset) throws Exception
     {
       boolean bCanCommit = false;
       
@@ -735,11 +737,11 @@ public class LiveDataKafkaToDBClient {
 					}
 					sSQL.append(" PRIMARY KEY(\"" + lstColumnNamesAndLengths.get(0) + "\"))");
 				}
-				Statement stmt = conDstDB.createStatement();
+				Statement stmt = getDSTConnection().createStatement();
 				try {
 					if (System.getProperty("SQLDebug") != null)
 						logger.info (sSQL);
-					stmt = conDstDB.createStatement();
+					stmt = getDSTConnection().createStatement();
 					stmt.execute(sSQL.toString());
 					bCanCommit = true;
 				} catch (Exception e) {
@@ -753,7 +755,7 @@ public class LiveDataKafkaToDBClient {
 				if (sDBAction.equalsIgnoreCase("DROPANDCREATE") && bCanCommit)
 				{
 					sDBAction = "CREATE";
-					conDstDB.commit ();
+					getDSTConnection().commit ();
 				}
 				else
 					sDBAction = "NONE";
@@ -1018,8 +1020,9 @@ public class LiveDataKafkaToDBClient {
 
 	protected Connection getDSTConnection() throws SQLException, ClassNotFoundException
 	{
-		Connection dbConn = getDBConnection(getDstDBType(), getDstDBServer(), getDstDBPort(), getDstDBDatabase(), getDstDBUsername(), getDstDBPassword());
-		return dbConn;
+		if (m_ConDstDB == null)
+			m_ConDstDB = getDBConnection(getDstDBType(), getDstDBServer(), getDstDBPort(), getDstDBDatabase(), getDstDBUsername(), getDstDBPassword());
+		return m_ConDstDB;
 	}
 
 	public String getDBURL()
