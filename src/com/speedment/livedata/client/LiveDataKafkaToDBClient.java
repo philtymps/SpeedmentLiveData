@@ -880,6 +880,12 @@ public class LiveDataKafkaToDBClient {
 		while (enumPropNames.hasMoreElements())
 		{
 			String	sPropName = (String)enumPropNames.nextElement();
+
+			// enabled and topic are not a real Kafka properties so don't add it
+			if (sPropName.equals("speedment.consumer.kafka.enabled")
+			||  sPropName.equals("speedment.consumer.kafka.topic"))
+				continue;
+
 			if (sPropName.startsWith(sKafkaPropPrefix))
 				propKafka.setProperty(sPropName.substring(sKafkaPropPrefix.length()), (String)getProperties().get(sPropName));
 		}

@@ -541,6 +541,10 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			{
 				// strip off the category "yfs."
 				String	sSystemPropName = sPropName.substring(4);
+				// enabled and topic are not a real Kafka properties so don't add it
+				if (sSystemPropName.equals("speedment.producer.kafka.enabled")
+				||  sSystemPropName.equals("speedment.producer.kafka.topic"))
+					continue;
 				String	sSystemPropValue;
 				if (!YFCObject.isVoid(sSystemPropValue = getSystemParameter (env, sSystemPropName, sSystemPropName)))
 					m_KafkaProperties.setProperty(sPropName.substring(sKafkaPropPrefix.length()), sSystemPropValue);
