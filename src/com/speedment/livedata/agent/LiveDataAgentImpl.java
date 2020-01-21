@@ -541,13 +541,16 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			{
 				// strip off the category "yfs."
 				String	sSystemPropName = sPropName.substring(4);
+				
 				// enabled and topic are not a real Kafka properties so don't add it
-				if (sSystemPropName.equals("speedment.producer.kafka.enabled")
-				||  sSystemPropName.equals("speedment.producer.kafka.topic"))
-					continue;
 				String	sSystemPropValue;
 				if (!YFCObject.isVoid(sSystemPropValue = getSystemParameter (env, sSystemPropName, sSystemPropName)))
-					m_KafkaProperties.setProperty(sPropName.substring(sKafkaPropPrefix.length()), sSystemPropValue);
+				{
+					// enabled and topic are not a real Kafka properties so don't add them
+					if (!(sSystemPropName.equals("speedment.producer.kafka.enabled")
+					||    sSystemPropName.equals("speedment.producer.kafka.topic")))
+						m_KafkaProperties.setProperty(sPropName.substring(sKafkaPropPrefix.length()), sSystemPropValue);
+				}
 			}
 		}
 		// set transactional id to the task id
@@ -738,7 +741,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 
 	  protected	void	calcJobRunUntil (YFCElement eleJobXML)
 	  {
-		long	lCurrentTime = System.currentTimeMillis();
+		long	lCurrentTime = System.currentTimeMillis() - (Long.valueOf((String)getProperty("MinAtRestSeconds")) * 1000L);
 		long	lNewRunUntil;
 
 		long	lFrequencyInHours = eleJobXML.getLongAttribute("FrequencyInHours");
@@ -766,7 +769,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			} while (lNewRunUntil <= lCurrentTime);
 		}
 		// to allow records to commit we will decrease the until run time by one second
-		eleJobXML.setAttribute ("RunUntil", Long.toString(lRunUntil - 1000));
+		eleJobXML.setAttribute ("RunUntil", Long.toString(lRunUntil));
 	  }
 	  
 	  protected boolean IsAnyJobPendingOrRunning (YFSEnvironment env) throws Exception
@@ -1148,6 +1151,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			getAgentParameter("TransactionId", inXML);
 			getAgentParameter("TasksToResetForFirstRun", inXML, "");
 			getAgentParameter("DBAction", inXML, "NONE");
+			getAgentParameter("MinAtRestSeconds", inXML, "10");
 			
 			getSystemParameter (env, "speedment.urlencoded.columns", "URLEncodedColumns", "");
 			
