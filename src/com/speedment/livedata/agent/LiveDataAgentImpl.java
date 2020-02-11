@@ -17,6 +17,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import 	java.util.concurrent.TimeUnit;
@@ -33,6 +34,7 @@ import com.yantra.yfc.core.YFCObject;
 import com.yantra.yfc.dom.YFCDocument;
 import com.yantra.yfc.dom.YFCElement;
 import com.yantra.yfc.dom.YFCNode;
+import com.yantra.yfc.dom.YFCNodeList;
 import com.yantra.yfc.log.YFCLogCategory;
 import com.yantra.yfs.japi.YFSEnvironment;
 import com.yantra.ycp.core.YCPContext;
@@ -528,10 +530,20 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 
 	  protected Properties initializeKafkaProperties (YFSEnvironment env, String sTaskId) throws Exception
 	  {
-		Properties propCustomerOverrides = new Properties();
-		propCustomerOverrides.load(getClass().getResourceAsStream(LiveDataConsts.LIVEDATA_CUSTOMER_OVERRIDES));
-		String		sKafkaPropPrefix = "yfs.speedment.producer.kafka.";
+		Properties propCustomerOverrides = new Properties();		
+		String		sKafkaPropPrefix = "speedment.producer.kafka.";
+	
+		// first we attempt to load properties from the DB 
+		propCustomerOverrides.putAll(getDBPropertiesStartingWith(env, sKafkaPropPrefix));
 		Enumeration<?>	enumPropNames = propCustomerOverrides.propertyNames();
+		
+		// if none of the kafka properties were found in the database
+		if (!enumPropNames.hasMoreElements())
+		{
+			// load properties from customer_overrides.properties
+			propCustomerOverrides.load(getClass().getResourceAsStream(LiveDataConsts.LIVEDATA_CUSTOMER_OVERRIDES));
+			enumPropNames = propCustomerOverrides.propertyNames();
+		}
 
 		m_KafkaProperties = new Properties();
 		while (enumPropNames.hasMoreElements())
@@ -539,17 +551,20 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			String	sPropName = (String)enumPropNames.nextElement();
 			if (sPropName.contains(sKafkaPropPrefix))
 			{
-				// strip off the category "yfs."
-				String	sSystemPropName = sPropName.substring(4);
+				String sSystemPropName = sPropName;
 				
-				// enabled and topic are not a real Kafka properties so don't add it
+				// strip off the category "yfs."
+				if (sPropName.startsWith("yfs."))
+					sSystemPropName = sPropName.substring(4);
+				
+				// add kafka properties to the properties used for kafka connections
 				String	sSystemPropValue;
 				if (!YFCObject.isVoid(sSystemPropValue = getSystemParameter (env, sSystemPropName, sSystemPropName)))
 				{
 					// enabled and topic are not a real Kafka properties so don't add them
 					if (!(sSystemPropName.equals("speedment.producer.kafka.enabled")
 					||    sSystemPropName.equals("speedment.producer.kafka.topic")))
-						m_KafkaProperties.setProperty(sPropName.substring(sKafkaPropPrefix.length()), sSystemPropValue);
+						m_KafkaProperties.setProperty(sPropName.substring(sPropName.indexOf(".kafka.")+7), sSystemPropValue);
 				}
 			}
 		}
@@ -564,7 +579,27 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		return m_KafkaProperties;
 	  }
 
-	  public	void debugProperties (Properties pProps)
+	@SuppressWarnings("rawtypes")
+	private Properties getDBPropertiesStartingWith(YFSEnvironment env, String sPropPrefix) throws Exception
+	{
+		YFCDocument	docGetPropertyMetadataList = YFCDocument.getDocumentFor("<PropertyMetadata Category=\"yfs\" BasePropertyName=\"" + sPropPrefix + "\" BasePropertyNameQryType=\"FLIKE\"/>");
+		YIFApi api = YIFClientFactory.getInstance().getLocalApi ();
+		Properties props = new Properties();
+		
+		docGetPropertyMetadataList = YFCDocument.getDocumentFor(api.getPropertyMetadataList(env, docGetPropertyMetadataList.getDocument()));
+		YFCElement	elePropertyMetadataList = docGetPropertyMetadataList.getDocumentElement();
+		YFCNodeList<YFCElement> eleProperties = elePropertyMetadataList.getElementsByTagName("Property");
+		Iterator 	iProperties = eleProperties.iterator();
+		while (iProperties.hasNext())
+		{
+			YFCElement	eleProperty = (YFCElement) iProperties.next();
+			props.setProperty(eleProperty.getAttribute("BasePropertyName"), eleProperty.getAttribute("PropertyValue"));
+		}
+		// return properties found
+		return props;
+	}
+
+	public	void debugProperties (Properties pProps)
 	  {
 		Enumeration<?>	enumPropNames = pProps.propertyNames();
 		LiveDataEncrypter	ldkEncrypter = new LiveDataEncrypter ();
