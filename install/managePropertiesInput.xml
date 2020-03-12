@@ -16,7 +16,7 @@
   </API>
   <API Name="manageProperty">
     <Input>
-      <Property BasePropertyName="speedment.producer.kafka.bootstrap.servers" PropertyValue="[KAFKA-HOST]:9092" Category="yfs" PropertyOverride="BASE">
+      <Property BasePropertyName="speedment.producer.kafka.bootstrap.servers" PropertyValue="[KAFKA-HOSTS-FROM-IBM-CLOUD]" Category="yfs" PropertyOverride="BASE">
         <PropertyMetadata BasePropertyName="speedment.producer.kafka.bootstrap.servers" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
       </Property>
     </Input>
@@ -135,7 +135,7 @@
   </API>
   <API Name="manageProperty">
     <Input>
-      <Property BasePropertyName="speedment.producer.kafka.sasl.jaas.config" PropertyValue="org.apache.kafka.common.security.plain.PlainLoginModule required username=&quot;token&quot; password=&quot;[API-KEY]&quot;;" Category="yfs" PropertyOverride="BASE">
+      <Property BasePropertyName="speedment.producer.kafka.sasl.jaas.config" PropertyValue="org.apache.kafka.common.security.plain.PlainLoginModule required username=&quot;token&quot; password=&quot;[API-KEY-FROM-IBM-CLOUD]&quot;;" Category="yfs" PropertyOverride="BASE">
         <PropertyMetadata BasePropertyName="speedment.producer.kafka.sasl.jaas.config" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
       </Property>
     </Input>
