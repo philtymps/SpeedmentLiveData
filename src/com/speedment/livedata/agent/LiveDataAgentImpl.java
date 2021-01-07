@@ -122,6 +122,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 					@SuppressWarnings("unused")
 					YFCDocument	docDataExtrConfig = YFCDocument.createDocument ("DataExtractConfigList");
 					YFCElement	eleJobXML = (YFCElement)iDataExtractConfig.next();
+					getTableColumnsForJob(env, eleJobXML);
 
 					// carry over getJobs() xml attributes to executeJobs() that we want or need
 					loadDefaultPropertiesForJob(eleJobXML);
@@ -152,8 +153,10 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				while (iDataExtractConfig.hasNext())
 				{
 					String		sDataExtractConfigKey = (String)iDataExtractConfig.next();
+					YFCElement	eleJobXML = (YFCElement)srtDataExtractConfig.get(sDataExtractConfigKey);
+					getTableColumnsForJob(env, eleJobXML);
 
-					if (initializeJobInDB(env, (YFCElement)srtDataExtractConfig.get(sDataExtractConfigKey), (String)getProperty("TransactionId")))
+					if (initializeJobInDB(env, eleJobXML, (String)getProperty("TransactionId")))
 						eleSortedDataExtractConfig.importNode((YFCNode)srtDataExtractConfig.get(sDataExtractConfigKey));
 				}
 
@@ -317,7 +320,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			initDefaultPropertiesForAgent (env, inXML);
 			if (IsDBEnabled())
 				conDstDB = getDSTConnection();
-			
+
 			if (IsDebugging())
 			{
 				logger.debug (dfCurrent.format(new Date()) + ": Executing Job Impl - Input XML:");
@@ -339,15 +342,15 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			Timestamp	tsBetweenStart = new Timestamp (tsLastRecordModifiedTS.getTime());
 			Timestamp	tsBetweenEnd   = new Timestamp (tsRunUntil.getTime());
 		
-			String		sColumns = eleJobXML.getAttribute("Columns");
+			String		sTableColumns = eleJobXML.getAttribute("Columns");
 			String		sTableName = eleJobXML.getAttribute("TableName");
 			
-			String		sHeaderToSend = LiveDataConsts.LIVEDATA_BEGINTABLE_IDENTIFIER + "," + eleJobXML.getAttribute("DataExtractConfigKey") + "," + sTableName + "," + sColumns;
+			String		sHeaderToSend = LiveDataConsts.LIVEDATA_BEGINTABLE_IDENTIFIER + "," + eleJobXML.getAttribute("DataExtractConfigKey") + "," + sTableName + "," + sTableColumns;
 			// send the table information first (DataExractConfigKey, Table, Columns)
 			if (IsKafkaEnabled())
 				kafkaProducer.send(new ProducerRecord<>(eleJobXML.getAttribute("speedment.producer.kafka.topic"), Long.toString(System.currentTimeMillis()), sHeaderToSend));
 
-			StringBuilder sSQL = new StringBuilder("SELECT " + sColumns + ",MODIFYTS FROM " + sTableName);
+			StringBuilder sSQL = new StringBuilder("SELECT " + sTableColumns + ",MODIFYTS FROM " + sTableName);
 			sSQL.append(" WHERE MODIFYTS BETWEEN '" + tsBetweenStart.toString() + "' AND '" + tsBetweenEnd.toString() + "' ORDER BY MODIFYTS");
 			if (!YFCObject.isVoid(getProperty ("FetchLimit")))
 				sSQL.append(" FETCH FIRST " + getProperty("FetchLimit") + " ROWS ONLY");
@@ -358,7 +361,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			PreparedStatement ps = conDB.prepareStatement(sSQL.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			ResultSet	rsResults = ps.executeQuery();
 
-			List<String> lstColumns = Arrays.asList(sColumns.split("\\s*,\\s*"));
+			List<String> lstColumns = Arrays.asList(sTableColumns.split("\\s*,\\s*"));
 			List<String> lstColumnsToEncode = Arrays.asList(((String)getProperty ("URLEncodedColumns")).split("\\s*,\\s*"));
 			long	lTotalRecords = 0;
 			if (rsResults.next())
@@ -533,16 +536,19 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		Properties propCustomerOverrides = new Properties();		
 		String		sKafkaPropPrefix = "speedment.producer.kafka.";
 	
+		logger.debug("Entering initializeKafkaProperties");
+
 		// first we attempt to load properties from the DB 
 		propCustomerOverrides.putAll(getDBPropertiesStartingWith(env, sKafkaPropPrefix));
 		Enumeration<?>	enumPropNames = propCustomerOverrides.propertyNames();
-		
 		// if none of the kafka properties were found in the database
 		if (!enumPropNames.hasMoreElements())
 		{
 			// load properties from customer_overrides.properties
 			propCustomerOverrides.load(getClass().getResourceAsStream(LiveDataConsts.LIVEDATA_CUSTOMER_OVERRIDES));
 			enumPropNames = propCustomerOverrides.propertyNames();
+			logger.debug ("USING PROPERTIES FROM CUSTOMER_OVERRIDES");
+			debugProperties(propCustomerOverrides);
 		}
 
 		m_KafkaProperties = new Properties();
@@ -582,18 +588,36 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 	@SuppressWarnings("rawtypes")
 	private Properties getDBPropertiesStartingWith(YFSEnvironment env, String sPropPrefix) throws Exception
 	{
+		logger.debug ("Entering getDBPropertiesStartingWith");
+
 		YFCDocument	docGetPropertyMetadataList = YFCDocument.getDocumentFor("<PropertyMetadata Category=\"yfs\" BasePropertyName=\"" + sPropPrefix + "\" BasePropertyNameQryType=\"FLIKE\"/>");
 		YIFApi api = YIFClientFactory.getInstance().getLocalApi ();
 		Properties props = new Properties();
 		
+		logger.debug("Input to getPropertyMetadataList");
+		logger.debug(docGetPropertyMetadataList.getString());
+		
 		docGetPropertyMetadataList = YFCDocument.getDocumentFor(api.getPropertyMetadataList(env, docGetPropertyMetadataList.getDocument()));
+
+		logger.debug("Output from getPropertyMetadataList");
+		logger.debug(docGetPropertyMetadataList.getString());
+		
 		YFCElement	elePropertyMetadataList = docGetPropertyMetadataList.getDocumentElement();
 		YFCNodeList<YFCElement> eleProperties = elePropertyMetadataList.getElementsByTagName("Property");
 		Iterator 	iProperties = eleProperties.iterator();
-		while (iProperties.hasNext())
+		if (iProperties.hasNext())
 		{
-			YFCElement	eleProperty = (YFCElement) iProperties.next();
-			props.setProperty(eleProperty.getAttribute("BasePropertyName"), eleProperty.getAttribute("PropertyValue"));
+			while (iProperties.hasNext())
+			{
+				YFCElement	eleProperty = (YFCElement) iProperties.next();
+				props.setProperty(eleProperty.getAttribute("BasePropertyName"), eleProperty.getAttribute("PropertyValue"));
+			}
+			logger.debug ("KAFKA PRODUCER PROPERTIES FOUND IN DB");
+			debugProperties (props);
+		}
+		else
+		{
+			logger.debug ("NO KAFKA PRODUCER PROPERTIES FOUND IN DB");
 		}
 		// return properties found
 		return props;
@@ -870,7 +894,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 	    List<String>				lstTaskToResetForFirstRun = Arrays.asList(sTasksToResetForFirstRun.split("\\s*,\\s*"));
 		List<String>				lstTablesToResetForFirstRun = new ArrayList<String>();
 
-		Hashtable<String, String>	htTablesColumsnAndLengths = new Hashtable<String, String> ();
+		Hashtable<String, String>	htTableColumsAndLengths = new Hashtable<String, String> ();
 		String 						sDBAction = ((String)getProperty ("DBAction")).toUpperCase();
 
 		setInKafkaTransaction(false);
@@ -909,9 +933,9 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				if (lstTaskToResetForFirstRun.contains(sTaskId))
 				{
 					String						sTableColumns = getTableColumnsForJob (env, sCfgDetailKey);
-					List<String>				lstTableColumns = Arrays.asList(sTableColumns.split("\\s*,\\s*"));
-					StringBuilder				sTableColumnsAndLengths = new StringBuilder();
 					boolean			 			bNewColumnLengthCombo = false;
+					java.util.List<String>		lstTableColumns = Arrays.asList(sTableColumns.split("\\s*,\\s*"));
+					StringBuilder				sTableColumnsAndLengths = new StringBuilder();
 
 					for (String sTableColumn : lstTableColumns)
 					{
@@ -922,7 +946,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 					}
 					
 					// add table columns & lengths to the table columns hashtable for use in DBAction=CREATE
-					htTablesColumsnAndLengths.put(sTableName, sTableColumnsAndLengths.toString());
+					htTableColumsAndLengths.put(sTableName, sTableColumnsAndLengths.toString());
 					lstTablesToResetForFirstRun.add(sTableName);
 				}
 			}
@@ -1007,7 +1031,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 						else if (sDBAction.equalsIgnoreCase("CREATE"))
 						{
 							sSQL = new StringBuilder(sDBAction + "CREATE TABLE IF NOT EXISTS " + sTableToResetForFirstRun);
-							List<String> 		lstColumnDetails = Arrays.asList(htTablesColumsnAndLengths.get(sTableToResetForFirstRun).split("\\s*,\\s*"));
+							List<String> 		lstColumnDetails = Arrays.asList(htTableColumsAndLengths.get(sTableToResetForFirstRun).split("\\s*,\\s*"));
 							sSQL.append(" (");
 							Iterator<String>	iColumns = lstColumnDetails.iterator();
 							while (iColumns.hasNext())
@@ -1031,7 +1055,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 						} catch (Exception e) {
 							sDBAction = "NONE";
 					  	     if (IsDebugging())
-					  	  		  System.out.println ("Exception Executing SQL in resetRunningOrPendingJobs: " + e.getClass() + e.getMessage());
+					  	  		  logger.debug ("Exception Executing SQL in resetRunningOrPendingJobs: " + e.getClass() + e.getMessage());
 						} finally {
 							stmt.close();
 						}
@@ -1057,7 +1081,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				getKafkaProducer().initTransactions();
 				for (String sSendTableName : lstTablesToResetForFirstRun)
 				{
-					String sRecordToSend = LiveDataConsts.LIVEDATA_RESET_IDENTIFIER + "," + sDBAction.toUpperCase() + "," + sSendTableName + ","  + htTablesColumsnAndLengths.get(sSendTableName);
+					String sRecordToSend = LiveDataConsts.LIVEDATA_RESET_IDENTIFIER + "," + sDBAction.toUpperCase() + "," + sSendTableName + ","  + htTableColumsAndLengths.get(sSendTableName);
 
 					// send the following reset message SPEEDMENT-RESET,DBACTION,TABLE_NAME,TABLE_COLUMNS_AND_LENGTHS
 					getKafkaProducer().beginTransaction();
@@ -1154,14 +1178,41 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			}
 	  }
 	  
-	  protected	String getTableColumnsForJob (YFSEnvironment env, String sDataExtractCfgKey) throws Exception
+	  protected	String getTableColumnsForJob (YFSEnvironment env, YFCElement eleJobXML) throws Exception
+	  {
+		  eleJobXML.setAttribute("Columns", getTableColumnsForJob (env, eleJobXML.getAttribute("DataExtractConfigKey")));
+		  return (eleJobXML.getAttribute("Columns"));
+	  }
+	  
+	  protected	String getTableColumnsForJob (YFSEnvironment env, String sDataExtractConfigKey) throws Exception
 	  {
 			YIFApi api = YIFClientFactory.getInstance().getLocalApi ();
 			Document	docDataExtractConfig = api.executeFlow(env, "CocDataExtractConfig",
-											   YFCDocument.getDocumentFor("<DataExtractConfig Action=\"GET\" DataExtractConfigKey=\""+ sDataExtractCfgKey + "\" />").getDocument());
+											   YFCDocument.getDocumentFor("<DataExtractConfig Action=\"GET\" DataExtractConfigKey=\""+ sDataExtractConfigKey + "\" />").getDocument());
 			YFCElement eleDataExtractConfig = YFCDocument.getDocumentFor(docDataExtractConfig).getDocumentElement();
 			if (!YFCObject.isVoid(eleDataExtractConfig = eleDataExtractConfig.getFirstChildElement()))
-				return eleDataExtractConfig.getAttribute("Columns");
+			{
+				String 			sTableColumns = eleDataExtractConfig.getAttribute("Columns");
+				List<String>	lstTableColumns = Arrays.asList(sTableColumns.split("\\s*,\\s*"));
+				StringBuilder	strTableColumns = new StringBuilder();
+				
+				// table columns configured with just the single PRIMARY KEY column will force all columns to be extracted
+				if (lstTableColumns.size() == 1 && lstTableColumns.get(0).contains("KEY"))
+				{
+					lstTableColumns = getAllColumnNames (((YCPContext)env).getDBConnection(), eleDataExtractConfig.getAttribute("TableName"));
+					boolean		bAppendComma = false;
+					for (String sTableColumn : lstTableColumns)
+					{
+						if (bAppendComma)
+							strTableColumns.append(',');
+						strTableColumns.append(sTableColumn);
+						bAppendComma = true;
+					}
+				}
+				else
+					strTableColumns.append(sTableColumns);
+				return strTableColumns.toString();
+			}
 			else
 				return "";
 	  }
@@ -1234,6 +1285,45 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				  logger.info ("Exception in getSuggestedColumnWidth: " + e.getClass() + " " + e.getMessage());
 	  	  }
 		  return iMaxColLength;
+	  }
+
+	  protected	java.util.List<String>	getAllColumnNames (Connection conDB, String sTable)
+	  {
+		  String sSQL = "SELECT * FROM " + sTable + " FETCH FIRST 1 ROW ONLY";
+		  List<String> lstColumnNames = new ArrayList<String>();
+		  try {
+			  Statement			stmt = conDB.createStatement();
+			  ResultSet			rsColumns = stmt.executeQuery(sSQL);
+			  int				iColumn = 1;
+			  
+			  if (rsColumns.next())
+			  {
+				  try {
+					  while (iColumn < rsColumns.getMetaData().getColumnCount())
+					  	lstColumnNames.add((String)rsColumns.getMetaData().getColumnName(iColumn++));
+				  } catch (Exception e) {
+					  if (IsDebugging())
+						  logger.info ("Exception in getAllColumnNames Iteraterating over Columns: " + e.getClass() + " " + e.getMessage());
+				  }
+			  }
+
+			  stmt.close();
+			  rsColumns.close();
+			  if (IsDebugging())
+			  {
+				  iColumn = 1;
+				  logger.info ("getAllColumnNames() method returned " + lstColumnNames.size() + " columns");
+				  for (String sColumn : lstColumnNames)
+				  {
+					  logger.info("Column " + iColumn + "=" + sColumn);
+					  iColumn++;
+				  }
+			  }
+		  } catch (Exception e) {
+			  if (IsDebugging())
+				  logger.info ("Exception in getAllColumnNames: " + e.getClass() + " " + e.getMessage());
+	  	  }
+		  return lstColumnNames;
 	  }
 
 	  protected boolean IsDebugging ()

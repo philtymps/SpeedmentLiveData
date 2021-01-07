@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<MultiApi>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.enabled" PropertyValue="true" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.enabled" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.topic" PropertyValue="speedment-topic" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.topic" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.bootstrap.servers" PropertyValue="broker-3-2lxkj61qqwq0r2hp.kafka.svc02.us-south.eventstreams.cloud.ibm.com:9093" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.bootstrap.servers" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.transactional.id" PropertyValue="SPEEDMENT_LIVE_DATA.2001.ex" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.transactional.id" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.enabled" PropertyValue="false" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.enabled" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBType" PropertyValue="DB2" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBType" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBServer" PropertyValue="[DBSERVER]" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBServer" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBPort" PropertyValue="[DBPORT]" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBPort" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DSTDatabase" PropertyValue="OMDB" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DSTDatabase" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBSchema" PropertyValue="OMDB" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBSchema" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBUsername" PropertyValue="[DBUSER]" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBUsername" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.database.DstDBPassword" PropertyValue="[DBPASS]" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.database.DstDBPassword" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.urlencoded.columns" PropertyValue="ITEM_DESCRIPTION,ITEM_SHORT_DESCRIPTION,SHORT_DESCRIPTION,DESCRIPTION,EXTENDED_DESCRIPTION" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.urlencoded.columns" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.key.serializer" PropertyValue="org.apache.kafka.common.serialization.StringSerializer" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.key.serializer" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.value.serializer" PropertyValue="org.apache.kafka.common.serialization.StringSerializer" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.value.serializer" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.client.dns.lookup" PropertyValue="use_all_dns_ips" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.client.dns.lookup" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.client.id" PropertyValue="SPEEDMENT" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.client.id" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.security.protocol" PropertyValue="SASL_SSL" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.security.protocol" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.sasl.mechanism" PropertyValue="PLAIN" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.sasl.mechanism" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.sasl.jaas.config" PropertyValue="org.apache.kafka.common.security.plain.PlainLoginModule required username=&quot;token&quot; password=&quot;Zwz2sptnBK_BoDBagJRtpCYEWAblfkzaz0IjVhTONipa&quot;;" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.sasl.jaas.config" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.ssl.protocol" PropertyValue="TLSv1.2" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.ssl.protocol" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.ssl.enabled.protocols" PropertyValue="TLSv1.2" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.ssl.enabled.protocols" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.ssl.endpoint.identification.algorithm" PropertyValue="HTTPS" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.ssl.endpoint.identification.algorithm" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+  <API Name="manageProperty">
+    <Input>
+      <Property BasePropertyName="speedment.producer.kafka.acks" PropertyValue="-1" Category="yfs" PropertyOverride="BASE">
+        <PropertyMetadata BasePropertyName="speedment.producer.kafka.acks" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
+      </Property>
+    </Input>
+  </API>
+</MultiApi>

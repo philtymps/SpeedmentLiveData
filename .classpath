@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/platform_afc.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/platform_afc.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/kafka-clients-2.3.1.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/sqlite-jdbc-3.27.2.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/log4j-1.2.17.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/snappy-java-1.1.7.3.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/icu4j-53_1.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/install_foundation.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/platform_baseutils.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/slf4j-api-1.7.26.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/xapi.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/ysopshared.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/platform_afc_ui_impl_be.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/smcfsshared.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/ycdshared.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/scecoreshared.jar"/>
-	<classpathentry kind="lib" path="/DIAB94/Runtime/jarall/slf4j-log4j12-1.7.26.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/kafka-clients-2.3.1.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/sqlite-jdbc-3.27.2.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/log4j-1.2.17.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/snappy-java-1.1.7.3.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/icu4j-53_1.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/install_foundation.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/platform_baseutils.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/slf4j-api-1.7.26.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/xapi.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/ysopshared.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/platform_afc_ui_impl_be.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/smcfsshared.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/ycdshared.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/scecoreshared.jar"/>
+	<classpathentry kind="lib" path="C:/DIAB94/Runtime/jarall/slf4j-log4j12-1.7.26.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

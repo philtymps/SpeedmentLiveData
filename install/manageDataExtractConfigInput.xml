@@ -5,6 +5,11 @@
   	<CommonCode Action="Manage" CodeType="CDE_VALID_TABLE" CodeValue="YFS_ITEM" CodeShortDescription="Makes YFS_ITEM Extractable" OrganizationCode="DEFAULT" />
     </Input>
   </API>
+  <API Name="manageCommonCode">
+    <Input>
+  	<CommonCode Action="Manage" CodeType="CDE_VALID_TABLE" CodeValue="YFS_CUSTOMER" CodeShortDescription="Makes YFS_CUSTOMER Extractable" OrganizationCode="DEFAULT" />
+    </Input>
+  </API>
   <API FlowName="CocDataExtractConfig">
     <Input>
       <DataExtractConfig Action="ADD" Columns="ORDER_HEADER_KEY,DOCUMENT_TYPE,ENTERPRISE_KEY,BUYER_ORGANIZATION_CODE,SELLER_ORGANIZATION_CODE,BILL_TO_ID,SHIP_TO_ID,ORDER_DATE,ORDER_NAME,ORDER_NO,ORDER_TYPE,ENTRY_TYPE,AUTHORIZED_CLIENT,REQ_SHIP_DATE,REQ_DELIVERY_DATE,CUSTOMER_FIRST_NAME,CUSTOMER_LAST_NAME,CUSTOMER_EMAILID,CUSTOMER_PHONE_NO,CUSTOMER_ZIP_CODE,CURRENCY,TAX,PAYMENT_STATUS,TOTAL_AMOUNT" DataExtractConfigKey="SPEEDMENT-ORDERS-10" FirstRunExtractInDays="30" FrequencyInHours="0" FrequencyInMins="2" TableName="YFS_ORDER_HEADER" TaskId="SPEEDMENT-ORDERS"/>
@@ -34,6 +39,11 @@
   <API FlowName="CocDataExtractConfig">
     <Input>
       <DataExtractConfig Action="ADD" Columns="INVENTORY_DEMAND_KEY,INVENTORY_ITEM_KEY,OWNER_KEY,SHIPNODE_KEY,DEMAND_TYPE,QUANTITY,SEGMENT,SEGMENT_TYPE,DEMAND_SHIP_DATE,DEMAND_CANCEL_DATE" DataExtractConfigKey="SPEEDMENT-INVENTORY-30" FirstRunExtractInDays="30" FrequencyInHours="0" FrequencyInMins="2" TableName="YFS_INVENTORY_DEMAND" TaskId="SPEEDMENT-INVENTORY"/>
+    </Input>
+  </API>
+  <API FlowName="CocDataExtractConfig">
+    <Input>
+      <DataExtractConfig Action="ADD" Columns="CUSTOMER_KEY" DataExtractConfigKey="SPEEDMENT-CUSTOMERS-10" FirstRunExtractInDays="3650" FrequencyInHours="0" FrequencyInMins="2" TableName="YFS_CUSTOMER" TaskId="SPEEDMENT-CUSTOMERS"/>
     </Input>
   </API>
 </MultiApi>
