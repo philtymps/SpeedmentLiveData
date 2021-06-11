@@ -946,6 +946,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 					}
 					
 					// add table columns & lengths to the table columns hashtable for use in DBAction=CREATE
+					// System.out.println ("Table Columns to RESET: " + sTableColumnsAndLengths.toString());
 					htTableColumsAndLengths.put(sTableName, sTableColumnsAndLengths.toString());
 					lstTablesToResetForFirstRun.add(sTableName);
 				}
@@ -1186,13 +1187,23 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 	  
 	  protected	String getTableColumnsForJob (YFSEnvironment env, String sDataExtractConfigKey) throws Exception
 	  {
-			YIFApi api = YIFClientFactory.getInstance().getLocalApi ();
-			Document	docDataExtractConfig = api.executeFlow(env, "CocDataExtractConfig",
-											   YFCDocument.getDocumentFor("<DataExtractConfig Action=\"GET\" DataExtractConfigKey=\""+ sDataExtractConfigKey + "\" />").getDocument());
+		  
+		    YIFApi api = YIFClientFactory.getInstance().getLocalApi ();
+		    YFCDocument	docDataExtractConfigInput = YFCDocument.getDocumentFor("<DataExtractConfig Action=\"GET\" DataExtractConfigKey=\""+ sDataExtractConfigKey + "\" />");
+		    // System.out.println ("Input to CocDataExtractConfig");
+		    // System.out.println (docDataExtractConfigInput.getString());
+			Document docDataExtractConfig = api.executeFlow(env, "CocDataExtractConfig",
+											   docDataExtractConfigInput.getDocument());
 			YFCElement eleDataExtractConfig = YFCDocument.getDocumentFor(docDataExtractConfig).getDocumentElement();
-			if (!YFCObject.isVoid(eleDataExtractConfig = eleDataExtractConfig.getFirstChildElement()))
+			// System.out.println ("Output from CocDataExtractConfig:");
+			// System.out.println (eleDataExtractConfig.toString());
+			String sTableColumns = eleDataExtractConfig.getAttribute("Columns");
+
+			//if (!YFCObject.isVoid(eleDataExtractConfig = eleDataExtractConfig.getFirstChildElement()))
+			if (!YFCObject.isVoid(sTableColumns))
 			{
-				String 			sTableColumns = eleDataExtractConfig.getAttribute("Columns");
+				// System.out.println ("Table Columns from JOB XML: " + sTableColumns);
+
 				List<String>	lstTableColumns = Arrays.asList(sTableColumns.split("\\s*,\\s*"));
 				StringBuilder	strTableColumns = new StringBuilder();
 				
@@ -1282,7 +1293,10 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			  rsMaxLength.close();
 		  } catch (Exception e) {
 			  if (IsDebugging())
+			  {
 				  logger.info ("Exception in getSuggestedColumnWidth: " + e.getClass() + " " + e.getMessage());
+				  // System.out.println ("Exception in getSuggestedColumnWidth: " + e.getClass() + " " + e.getMessage());
+			  }
 	  	  }
 		  return iMaxColLength;
 	  }
