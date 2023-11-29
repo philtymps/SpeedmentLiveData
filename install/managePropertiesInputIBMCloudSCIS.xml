@@ -9,14 +9,14 @@
   </API>
   <API Name="manageProperty">
     <Input>
-      <Property BasePropertyName="speedment.producer.kafka.topic" PropertyValue="speedment-topic" Category="yfs" PropertyOverride="BASE">
+      <Property BasePropertyName="speedment.producer.kafka.topic" PropertyValue="scis-topic" Category="yfs" PropertyOverride="BASE">
         <PropertyMetadata BasePropertyName="speedment.producer.kafka.topic" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
       </Property>
     </Input>
   </API>
   <API Name="manageProperty">
     <Input>
-      <Property BasePropertyName="speedment.producer.kafka.bootstrap.servers" PropertyValue="broker-3-2lxkj61qqwq0r2hp.kafka.svc02.us-south.eventstreams.cloud.ibm.com:9093" Category="yfs" PropertyOverride="BASE">
+      <Property BasePropertyName="speedment.producer.kafka.bootstrap.servers" PropertyValue="broker-0-z6nx4q0qrz2pccyx.kafka.svc09.us-south.eventstreams.cloud.ibm.com:9093,broker-1-z6nx4q0qrz2pccyx.kafka.svc09.us-south.eventstreams.cloud.ibm.com:9093,broker-4-z6nx4q0qrz2pccyx.kafka.svc09.us-south.eventstreams.cloud.ibm.com:9093,broker-3-z6nx4q0qrz2pccyx.kafka.svc09.us-south.eventstreams.cloud.ibm.com:9093,broker-5-z6nx4q0qrz2pccyx.kafka.svc09.us-south.eventstreams.cloud.ibm.com:9093,broker-2-z6nx4q0qrz2pccyx.kafka.svc09.us-south.eventstreams.cloud.ibm.com:9093" Category="yfs" PropertyOverride="BASE">
         <PropertyMetadata BasePropertyName="speedment.producer.kafka.bootstrap.servers" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
       </Property>
     </Input>
@@ -72,7 +72,7 @@
   </API>
   <API Name="manageProperty">
     <Input>
-      <Property BasePropertyName="speedment.producer.kafka.sasl.jaas.config" PropertyValue="org.apache.kafka.common.security.plain.PlainLoginModule required username=&quot;token&quot; password=&quot;Zwz2sptnBK_BoDBagJRtpCYEWAblfkzaz0IjVhTONipa&quot;;" Category="yfs" PropertyOverride="BASE">
+      <Property BasePropertyName="speedment.producer.kafka.sasl.jaas.config" PropertyValue="org.apache.kafka.common.security.plain.PlainLoginModule required username=&quot;token&quot; password=&quot;01m8vZ7s8NY5i6ZfO7-VA-QglFhAdA1ue9xTZ2osGYOF&quot;;" Category="yfs" PropertyOverride="BASE">
         <PropertyMetadata BasePropertyName="speedment.producer.kafka.sasl.jaas.config" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
       </Property>
     </Input>
