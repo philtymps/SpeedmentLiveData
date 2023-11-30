@@ -29,7 +29,7 @@ This will start the client-side server on your Windows/Linux machine and will lo
 
 Running the Agents:
 
-Launch the OMS BDA Home page: http://diab191.tympsnet.com
+Launch the OMS BDA Home page: http://oms.innovationcloud.info
 From the top menu select Agents and then select DataExtractAgent on the Agents List Screen
 
 This will bring you to the Live Data Agent Page.  Click the green Start Agent button and make sure the agent is started with not errors showing up in the log file.  Now you're ready to test drive the agent.
@@ -42,13 +42,14 @@ This will bring you to the Live Data Agent Page.  Click the green Start Agent bu
 
 4) Trigger the SPEEDMENT-ORDERS transaction. This will extract the YFS_ORDER_HEADER and YFS_ORDER_LINE tables and insrt into the target database.
 
-To create the database schema on your target database for the first time, manually trigger the SPEEDMENT-RESET agent.  You should notice 6 Tables being created including:
+To create the database schema on your target database for the first time, manually trigger the SPEEDMENT-RESET agent.  You should notice up to 7 Tables being created including:
 1) YFS_ORDER_HEADER - Order Header Records
 2) YFS_ORDER_LINE - Order Line Records
 3) YFS_ITEM - Item Records
 4) YFS_INVENTORY_ITEM - Inventory Item Records
 5) YFS_INVENTORY_SUPPLY - Inventory Supply Records
 6) YFS_INVENTORY_DEMAND - Inventory Demand Records
+7) YFS_SHIP_NODE - Ship Node Records
 
 Note you can trigger this transaction anytime you want to flush your target database of all the data and reload the data.  The data loaded is all items from the last 10 years and all your orders and inventory from the prior 30 days.
 
