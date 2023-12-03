@@ -282,10 +282,6 @@ public class LiveDataKafkaToDBClient {
                     }
                 }
             	
-            	if(ldkToDB.IsCOSEnabled()) {
-            		ktcRunner.publishCOSDataToCloud();
-            	}
-            	
             	if (ldkToDB.getVerboseFlag() && iRecordsProcessed > 0)
             	{
             		logger.info ("Processed " + iRecordsProcessed + " Records Successfullly...");
@@ -304,6 +300,11 @@ public class LiveDataKafkaToDBClient {
             			break;                	
             	}
             }
+        	
+        	if(ldkToDB.IsCOSEnabled()) {
+        		ktcRunner.publishCOSDataToCloud();
+        	}
+        	
         } catch (WakeupException e) {
         	logger.info("Stopped Abnormally..Cleaning up...");
         } catch (NullPointerException e) {

@@ -1,8 +1,11 @@
 package com.speedment.livedata.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,9 +48,8 @@ public class LiveDataKafkaToCOSRunner {
    	private AmazonS3 cosClient = null;
    	private HashMap<String, String> cosInputMap = null;
    	private HashMap<String, OrderHeader> orderHeaderMp = null;
-   	private HashMap<String, OrderLine> orderLineMp = null;
    	private LiveDataKafkaToDBClient ktdClient = null;
-   	private LiveDataUtils ldUtils = null;
+   	private List<OrderLine> orderLinesList = null;
    	
    	private Logger logger = Logger.getLogger(LiveDataKafkaToCOSRunner.class);
    	
@@ -60,12 +63,19 @@ public class LiveDataKafkaToCOSRunner {
     	createJsonFromLineData();
     	if(cosInputMap !=null) {
     		cosInputMap.forEach((k,v) ->
-	    		uploadFileFromText(k, v)
+	    		{
+					try {
+						uploadFileFromText(k, v);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 	    	);
     	}
     	cosInputMap = null;
     	orderHeaderMp = null;
-    	orderLineMp = null;
+    	orderLinesList = null;
 	} 
    	
    	public boolean processCOSDataRecord(String sTableName, String sTableColumns, 
@@ -76,11 +86,11 @@ public class LiveDataKafkaToCOSRunner {
 	  	//TODO: need to add more tables to list
 		switch (sTableName) {			
 			case LiveDataConsts.OMS_TABLE_ORDER_HEADER:
-				updateOrderDataInMap(lstTableColumns, lstTableValues, LiveDataConsts.OMS_TABLE_ORDER_HEADER);
+				updateOrderHeaderDataInMap(lstTableColumns, lstTableValues);
 				break;
 				
 			case LiveDataConsts.OMS_TABLE_ORDER_LINE:
-				updateOrderDataInMap(lstTableColumns, lstTableValues, LiveDataConsts.OMS_TABLE_ORDER_LINE);				
+				orderLinesList.add(new OrderLine(lstTableColumns, lstTableValues));				
 				break;
 			
 			default:
@@ -90,37 +100,16 @@ public class LiveDataKafkaToCOSRunner {
 		return dataProcessed;
 	}
 
-
-   	/*
-   	 * this method takes input for order and order line and populates the values to below maps
-   	 * - orderHeaderMp 
-	 *- orderLineMp
-   	 * 
-   	 */
-   	public void updateOrderDataInMap(List<String> lstTableColumns, List<String> lstTableValues, String dataType) {		
+   	public void updateOrderHeaderDataInMap(List<String> lstTableColumns, List<String> lstTableValues) {		
    		int iTableValuesOffset = 0;
-   		
-   		if(LiveDataConsts.OMS_TABLE_ORDER_HEADER.equals(dataType)) {
-			for (String sTableColumn : lstTableColumns){			
-				if(LiveDataConsts.OMS_ORDER_HEADER_KEY.equals(sTableColumn)) {				
-					orderHeaderMp.put(lstTableValues.get(iTableValuesOffset), 
-							new OrderHeader(lstTableColumns, lstTableValues));
-					break;
-				}
-				iTableValuesOffset++;	
+   		for (String sTableColumn : lstTableColumns){			
+			if(LiveDataConsts.OMS_ORDER_HEADER_KEY.equals(sTableColumn)) {				
+				orderHeaderMp.put(LiveDataUtils.removeUnwantedCharacters(lstTableValues.get(iTableValuesOffset)), 
+						new OrderHeader(lstTableColumns, lstTableValues));
+				break;
 			}
-		}
-		
-   		if(LiveDataConsts.OMS_TABLE_ORDER_LINE.equals(dataType)) {
-			for (String sTableColumn : lstTableColumns){			
-				if(LiveDataConsts.OMS_ORDER_HEADER_KEY.equals(sTableColumn)) {				
-					orderLineMp.put(lstTableValues.get(iTableValuesOffset), 
-							new OrderLine(lstTableColumns, lstTableValues));
-					break;
-				}
-				iTableValuesOffset++;	
-			}
-		}   				
+			iTableValuesOffset++;	
+		}		
 	}
 
    	/*
@@ -133,35 +122,27 @@ public class LiveDataKafkaToCOSRunner {
 		if(orderHeaderMp !=null) {
 			try {
 				for(Map.Entry<String, OrderHeader> entry : orderHeaderMp.entrySet()) {			    
-				    OrderHeader orderHeaderObj = entry.getValue();
-				
-				    String orderNo = ldUtils.removeUnwantedCharacters(orderHeaderObj.getOrderNo());
-				    String orderType = ldUtils.removeUnwantedCharacters(orderHeaderObj.getDocumentType());
 				    
-				    
-					StringBuilder cosInput = getCosInputBuilderFromMap(LiveDataConsts.COS_ORDER_HEADER); 
+					OrderHeader orderHeaderObj = entry.getValue();
 					
 					//creating the base json
-					JSONObject orderRootObj = ldUtils.createRootJsonForCOS();
+					JSONObject orderRootObj = LiveDataUtils.createRootJsonForCOS();
 					JSONObject businessObject = orderRootObj
 							.getJSONObject(LiveDataConsts.SCIS_EVENT_DETAILS)
 							.getJSONObject(LiveDataConsts.SCIS_BUSINESS_OBJECT); 
 					
 					appendOrderAttributesToJSONInput(businessObject, orderHeaderObj);
 
-					businessObject.put(LiveDataConsts.SCIS_GLOBAL_IDENTIFIERS, 
-							new JSONArray()
-							.put(new JSONObject()
-								.put(LiveDataConsts.SCIS_NAME, LiveDataConsts.SCIS_STERLING_SC_GLOBALID)
-								.put(LiveDataConsts.SCIS_VALUE,ldUtils.getOrderNumber(orderNo,ldUtils.getOrderType(orderType))))
-						);
+					String orderNo = LiveDataUtils.removeUnwantedCharacters(orderHeaderObj.getOrderNo());
+					String orderType = LiveDataUtils.removeUnwantedCharacters(orderHeaderObj.getDocumentType());
+					LiveDataUtils.createRootGlobalIdentifier(orderNo, orderType, businessObject);
 					
 					businessObject.put(LiveDataConsts.SCIS_ORDER_IDENTIFIER, orderNo);
-					businessObject.put(LiveDataConsts.SCIS_ORDER_TYPE, ldUtils.getOrderType(orderType));
+					businessObject.put(LiveDataConsts.SCIS_ORDER_TYPE, LiveDataUtils.getOrderType(orderType));
 					
 					logger.debug("appending cos data: " + orderRootObj.toString());
-					cosInput.append(orderRootObj.toString());
-					cosInputMap.put(LiveDataConsts.COS_ORDER_HEADER, cosInput.toString());		
+										
+					appendDataToCOSMap(orderRootObj, LiveDataConsts.COS_ORDER_HEADER); 
 				
 				}
 			} catch (Exception e) {			
@@ -180,53 +161,43 @@ public class LiveDataKafkaToCOSRunner {
    	 */
    	public void createJsonFromLineData() throws Exception {
 
-   		if(orderLineMp !=null) {
+   		if(orderLinesList !=null) {
    			try {
    				
-   				for(Entry<String, OrderLine> entry : orderLineMp.entrySet()) {			    
-   				    
-   					OrderLine orderLineObj = entry.getValue();
-   					StringBuilder cosInput = getCosInputBuilderFromMap(LiveDataConsts.COS_ORDER_LINE); 
+   				for(OrderLine orderLineObj: orderLinesList) {			    
+   				    String orderHK = orderLineObj.getOrderHeaderKey();
+   					OrderHeader orderObj = orderHeaderMp.get(orderHK);
    					
-   					//creating the base json
-   					JSONObject orderRootObj = ldUtils.createRootJsonForCOS();
+   					//creating the base json and related data
+   					JSONObject orderRootObj = LiveDataUtils.createRootJsonForCOS();
    					JSONObject businessObject = orderRootObj
    							.getJSONObject(LiveDataConsts.SCIS_EVENT_DETAILS)
    							.getJSONObject(LiveDataConsts.SCIS_BUSINESS_OBJECT); 
 
    					JSONObject orderLineJsonObj = new JSONObject();
-
    					appendLineAttributesToISONInput(orderLineJsonObj, orderLineObj);
-   					
-   					OrderHeader orderObj = orderHeaderMp.get(orderLineObj.getOrderHeaderKey());
-   					
-   					String orderNo = ldUtils.removeUnwantedCharacters(orderObj.getOrderNo());
-   					String orderType = ldUtils.removeUnwantedCharacters(orderObj.getDocumentType());				
-   					
-   					businessObject.put(LiveDataConsts.SCIS_GLOBAL_IDENTIFIERS, 
-   							new JSONArray()
-   							.put(new JSONObject()
-   								.put(LiveDataConsts.SCIS_NAME, LiveDataConsts.SCIS_STERLING_SC_GLOBALID)
-   								.put(LiveDataConsts.SCIS_VALUE, ldUtils.getOrderNumber(orderNo, ldUtils.getOrderType(orderType))))
-   						);
-   					
-   					businessObject.put(LiveDataConsts.SCIS_ORDER_IDENTIFIER, orderNo);
-   					businessObject.put(LiveDataConsts.SCIS_ORDER_TYPE, ldUtils.getOrderType(orderType));
-   					
    					businessObject.put(LiveDataConsts.SCIS_ORDER_LINES, new JSONArray().put(orderLineJsonObj));
    					
-   					orderLineJsonObj.put(LiveDataConsts.SCIS_GLOBAL_IDENTIFIERS, 
-   							new JSONArray()
-   							.put(new JSONObject()
-   								.put(LiveDataConsts.SCIS_NAME, LiveDataConsts.SCIS_STERLING_SC_GLOBALID)
-   								.put(LiveDataConsts.SCIS_VALUE, ldUtils.getOrderNumber(orderNo, ldUtils.getOrderType(orderType))))
-   						);
-   					orderLineJsonObj.put(LiveDataConsts.SCIS_CREATED_DATE, orderObj.getOrderDate());
-   					orderLineJsonObj.put(LiveDataConsts.SCIS_VALUE_CURRENCY, orderObj.getCurrency());
+   					if(orderObj !=null) {	   					
+	   					//attaching order related data
+	   					String orderNo = "";
+	   					String orderType = "";
+   						orderNo = orderObj.getOrderNo();
+   	   					orderType = orderObj.getDocumentType();
+   	   					
+   	   					businessObject.put(LiveDataConsts.SCIS_ORDER_TYPE, LiveDataUtils.getOrderType(orderType));
+   	   					businessObject.put(LiveDataConsts.SCIS_ORDER_IDENTIFIER, orderNo);
+   	   					LiveDataUtils.createRootGlobalIdentifier(orderNo, orderType, businessObject);
+   	   					LiveDataUtils.createRootGlobalIdentifier(orderNo, orderType, businessObject);
+   	   					
+   	   					//line related order data
+   		   				orderLineJsonObj.put(LiveDataConsts.SCIS_CREATED_DATE, orderObj.getOrderDate());
+   		   				orderLineJsonObj.put(LiveDataConsts.SCIS_VALUE_CURRENCY, orderObj.getCurrency());
+   	   					
+   					}
    					
-   					logger.debug("appending cos data: " + orderRootObj.toString());
-   					cosInput.append(orderRootObj.toString());
-   					cosInputMap.put(LiveDataConsts.COS_ORDER_LINE, cosInput.toString());
+   					logger.debug("appending cos data: " + orderRootObj.toString());   					
+   					appendDataToCOSMap(orderRootObj, LiveDataConsts.COS_ORDER_LINE);   					
    				}
    			} catch (Exception e) {
    				// TODO Auto-generated catch block
@@ -235,73 +206,57 @@ public class LiveDataKafkaToCOSRunner {
    		}		
 	}
    	
+   	private void appendDataToCOSMap(JSONObject orderRootObj, String dataType) {
+		StringBuilder cosInputBuilder = getCosInputBuilderFromMap(dataType);
+		cosInputBuilder.append(orderRootObj.toString());
+		cosInputMap.put(dataType, cosInputBuilder.toString());
+	}
+   	
 	private void appendOrderAttributesToJSONInput(JSONObject businessObject, 
 			OrderHeader orderHeaderObj) throws Exception {
 	
-		businessObject.put(LiveDataConsts.SCIS_BUYER, 
-				ldUtils.createGlobalIdentifier(ldUtils.removeUnwantedCharacters(orderHeaderObj.getBillToID())));
+		businessObject.put(LiveDataConsts.SCIS_CREATED_DATE, orderHeaderObj.getOrderDate());
+		businessObject.put(LiveDataConsts.SCIS_ORDER_VALUE_CURRENCY, orderHeaderObj.getCurrency());
+		businessObject.put(LiveDataConsts.SCIS_PLANNED_DEL_DATE, orderHeaderObj.getReqDeliveryDate());
+		businessObject.put(LiveDataConsts.SCIS_PLANNED_SHIP_DATE, orderHeaderObj.getReqShipDate());
+		businessObject.put(LiveDataConsts.SCIS_REQ_DELIVERY_DATE, orderHeaderObj.getReqDeliveryDate());
+		businessObject.put(LiveDataConsts.SCIS_REQ_SHIP_DATE, orderHeaderObj.getReqShipDate());
+		businessObject.put(LiveDataConsts.SCIS_TOTAL_VALUE, orderHeaderObj.getTotalAmount());
 		
-		businessObject.put(LiveDataConsts.SCIS_CREATED_DATE, 
-				ldUtils.removeUnwantedCharacters(orderHeaderObj.getOrderDate()));		
-				
-		businessObject.put(LiveDataConsts.SCIS_ORDER_VALUE_CURRENCY, 
-				ldUtils.removeUnwantedCharacters(orderHeaderObj.getCurrency()));
-			
-		businessObject.put(LiveDataConsts.SCIS_PLANNED_DEL_DATE, 
-				ldUtils.removeUnwantedCharacters(orderHeaderObj.getReqDeliveryDate()));
-			
-		businessObject.put(LiveDataConsts.SCIS_PLANNED_SHIP_DATE, 
-				ldUtils.removeUnwantedCharacters(orderHeaderObj.getReqShipDate()));
+		businessObject.put(LiveDataConsts.SCIS_BUYER, 
+				LiveDataUtils.createGlobalIdentifier(orderHeaderObj.getBillToID()));
 				
 		businessObject.put(LiveDataConsts.SCIS_SHIP_FROM_INSTR_LOCATION, 
-				ldUtils.createGlobalIdentifier(ldUtils.removeUnwantedCharacters(orderHeaderObj.getSellerOrg())));
+				LiveDataUtils.createGlobalIdentifier(orderHeaderObj.getSellerOrg()));
 		
 		businessObject.put(LiveDataConsts.SCIS_VENDOR, 
-				ldUtils.createGlobalIdentifier(ldUtils.removeUnwantedCharacters(orderHeaderObj.getSellerOrg())));
+				LiveDataUtils.createGlobalIdentifier(orderHeaderObj.getSellerOrg()));
 
 		businessObject.put(LiveDataConsts.SCIS_SHIP_TO_LOCATION, 
-				ldUtils.createGlobalIdentifier(ldUtils.removeUnwantedCharacters(orderHeaderObj.getShipToID())));
-		
+				LiveDataUtils.createGlobalIdentifier(orderHeaderObj.getShipToID()));
 	}
 	
    	private void appendLineAttributesToISONInput(JSONObject orderLineJsonObj, 
 			OrderLine orderLineObj) throws Exception {
 		
-   		orderLineJsonObj.put(LiveDataConsts.SCIS_ORDER_LINE_NO, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getPrimeLineNO()));
-				
-		orderLineJsonObj.put(LiveDataConsts.SCIS_REQ_DELIVERY_DATE, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getReqDeliveryDate()));
-
-		orderLineJsonObj.put(LiveDataConsts.SCIS_REQ_SHIP_DATE, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getReqShipDate()));
-				
+   		orderLineJsonObj.put(LiveDataConsts.SCIS_ORDER_LINE_NO, orderLineObj.getPrimeLineNO());				
+		orderLineJsonObj.put(LiveDataConsts.SCIS_REQ_DELIVERY_DATE, orderLineObj.getReqDeliveryDate());
+		orderLineJsonObj.put(LiveDataConsts.SCIS_REQ_SHIP_DATE, orderLineObj.getReqShipDate());
+		orderLineJsonObj.put(LiveDataConsts.SCIS_PRODUCT_VALUE,orderLineObj.getUnitPrice());				
+		orderLineJsonObj.put(LiveDataConsts.SCIS_QUANTITY, orderLineObj.getOrderedQty());				
+		orderLineJsonObj.put(LiveDataConsts.SCIS_QUANTITY_UNITS, orderLineObj.getUom());				
+		orderLineJsonObj.put(LiveDataConsts.SCIS_PLANNED_DEL_DATE, orderLineObj.getEarliestDeliveryDate());				
+		orderLineJsonObj.put(LiveDataConsts.SCIS_PLANNED_SHIP_DATE, orderLineObj.getEarliestShipDate());
+		orderLineJsonObj.put(LiveDataConsts.SCIS_VALUE, orderLineObj.getLineTotal());
+		
 		orderLineJsonObj.put(LiveDataConsts.SCIS_PRODUCT, 
-				ldUtils.createGlobalIdentifier(ldUtils.removeUnwantedCharacters(orderLineObj.getItemID())));
-				
-		orderLineJsonObj.put(LiveDataConsts.SCIS_PRODUCT_VALUE, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getUnitPrice()));
-				
-		orderLineJsonObj.put(LiveDataConsts.SCIS_QUANTITY, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getOrderedQty()));
-				
-		orderLineJsonObj.put(LiveDataConsts.SCIS_QUANTITY_UNITS, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getUom()));
-				
-		orderLineJsonObj.put(LiveDataConsts.SCIS_PLANNED_DEL_DATE, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getEarliestDeliveryDate()));
-				
-		orderLineJsonObj.put(LiveDataConsts.SCIS_PLANNED_SHIP_DATE, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getEarliestShipDate()));
-				
+				LiveDataUtils.createGlobalIdentifier(orderLineObj.getItemID()));
+		
 		orderLineJsonObj.put(LiveDataConsts.SCIS_SHIP_FROM_INSTR_LOCATION, 
-				ldUtils.createGlobalIdentifier(ldUtils.removeUnwantedCharacters(orderLineObj.getShipNode())));
+				LiveDataUtils.createGlobalIdentifier(orderLineObj.getShipNode()));
 				
 		orderLineJsonObj.put(LiveDataConsts.SCIS_SHIP_TO_LOCATION, 
-				ldUtils.createGlobalIdentifier(ldUtils.removeUnwantedCharacters(orderLineObj.getShipToID())));
-				
-		orderLineJsonObj.put(LiveDataConsts.SCIS_VALUE, 
-				ldUtils.removeUnwantedCharacters(orderLineObj.getLineTotal()));
+				LiveDataUtils.createGlobalIdentifier(orderLineObj.getShipToID()));
 		
 	}
 
@@ -321,8 +276,14 @@ public class LiveDataKafkaToCOSRunner {
 		return inputBuilder;
 	}
 	
-	public void uploadFileFromText(String fileName, String fileText) {    
-    	
+	public void uploadFileFromText(String fileName, String fileText) throws Exception {    
+		/*
+		//saving file to local machine for testing
+			String itemName2 = "C:\\cos\\tmp\\".concat(fileName).concat("-") + System.currentTimeMillis() + ".txt"; 
+			FileUtils.writeStringToFile(new File(itemName2), fileText, Charset.forName("UTF-8"));
+			logger.info("File pushed to cloud: " + itemName2);
+		*/
+		
     	try {
 			//creating a unique name
 			String itemName = "pw/pw_".concat(fileName).concat("-") + System.currentTimeMillis();
@@ -345,6 +306,7 @@ public class LiveDataKafkaToCOSRunner {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
     }
     
 	public AmazonS3 createClient(){
@@ -391,10 +353,8 @@ public class LiveDataKafkaToCOSRunner {
 		if(orderHeaderMp == null)
 			orderHeaderMp = new HashMap<String, OrderHeader>();
 		
-		if(orderLineMp == null)
-			orderLineMp = new HashMap<String, OrderLine>();
-		
-		ldUtils = new LiveDataUtils();
+		if(orderLinesList == null)
+			orderLinesList = new ArrayList<OrderLine>();		
 	}
 	
 

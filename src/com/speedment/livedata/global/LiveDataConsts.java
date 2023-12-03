@@ -96,7 +96,7 @@ public class LiveDataConsts {
 	public static	final String	OMS_PRIME_LINE_NO = "PRIME_LINE_NO";
 	public static	final String	OMS_ITEM_ID = "ITEM_ID";
 	public static	final String	OMS_UNIT_PRICE = "UNIT_PRICE";
-	public static	final String	OMS_ORDERDED_QTY = "ORDERDED_QTY";
+	public static	final String	OMS_ORDERED_QTY = "ORDERED_QTY";
 	public static	final String	OMS_UOM = "UOM";
 	public static	final String	OMS_SHIP_NODE = "SHIPNODE_KEY";
 	public static	final String	OMS_LINE_TOTAL = "LINE_TOTAL";

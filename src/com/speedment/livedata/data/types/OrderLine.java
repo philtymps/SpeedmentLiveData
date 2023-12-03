@@ -3,6 +3,7 @@ package com.speedment.livedata.data.types;
 import java.util.List;
 
 import com.speedment.livedata.global.LiveDataConsts;
+import com.speedment.livedata.global.LiveDataUtils;
 
 
 public class OrderLine {
@@ -30,63 +31,63 @@ public class OrderLine {
 	private void initializeOrderLineData(List<String> columnList, List<String> valueList) {
 		int index = 0;
 		for (String sTableColumn : columnList){			
-			
+			String value = LiveDataUtils.removeUnwantedCharacters(valueList.get(index));
 			switch (sTableColumn) {
 				
 				case LiveDataConsts.OMS_ORDER_LINE_KEY:				
-					orderLineKey = valueList.get(index);
+					orderLineKey = value;
 					break;
 				
 				case LiveDataConsts.OMS_ORDER_HEADER_KEY:				
-					orderHeaderKey = valueList.get(index);
+					orderHeaderKey = value;
 					break;
 				
 				case LiveDataConsts.OMS_PRIME_LINE_NO:				
-					primeLineNO = valueList.get(index);
+					primeLineNO = value;
 					break;
 				
 				case LiveDataConsts.OMS_REQ_DELIVERY_DATE:				
-					reqDeliveryDate = valueList.get(index);
+					reqDeliveryDate = value;
 					break;
 				
 				case LiveDataConsts.OMS_REQ_SHIP_DATE:				
-					reqShipDate = valueList.get(index);
+					reqShipDate = value;
 					break;
 				
 				case LiveDataConsts.OMS_UNIT_PRICE:				
-					unitPrice = valueList.get(index);
+					unitPrice = value;
 					break;
 				
 				case LiveDataConsts.OMS_ITEM_ID:				
-					itemID = valueList.get(index);
+					itemID = value;
 					break;
 				
-				case LiveDataConsts.OMS_ORDERDED_QTY:				
-					orderedQty = valueList.get(index);
+				case LiveDataConsts.OMS_ORDERED_QTY:				
+					orderedQty = value;
 					break;
 					
 				case LiveDataConsts.OMS_UOM:				
-					uom = valueList.get(index);
+					uom = value;
 					break;
 					
 				case LiveDataConsts.OMS_EARLIEST_DELIVERY_DATE:				
-					earliestDeliveryDate = valueList.get(index);
+					earliestDeliveryDate = value;
 					break;
 					
 				case LiveDataConsts.OMS_EARLIEST_SHIP_DATE:				
-					earliestShipDate = valueList.get(index);
+					earliestShipDate = value;
 					break;
 					
 				case LiveDataConsts.OMS_SHIP_ID:				
-					shipToID = valueList.get(index);
+					shipToID = value;
 					break;
 					
 				case LiveDataConsts.OMS_SHIP_NODE:				
-					shipNode = valueList.get(index);
+					shipNode = value;
 					break;	
 					
 				case LiveDataConsts.OMS_LINE_TOTAL:				
-					lineTotal = valueList.get(index);
+					lineTotal = value;
 					break;	
 				
 				default:

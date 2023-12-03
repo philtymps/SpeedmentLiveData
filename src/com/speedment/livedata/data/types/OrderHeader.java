@@ -3,6 +3,7 @@ package com.speedment.livedata.data.types;
 import java.util.List;
 
 import com.speedment.livedata.global.LiveDataConsts;
+import com.speedment.livedata.global.LiveDataUtils;
 
 public class OrderHeader {
 	private String orderHK;
@@ -15,7 +16,8 @@ public class OrderHeader {
 	private String reqShipDate;
 	private String sellerOrg;
 	private String shipToID;
-	
+	private String totalAmount;
+
 	public OrderHeader(List<String> columnList, List<String> valueList) {
 		initializeOrderData(columnList, valueList);
 	}
@@ -23,42 +25,53 @@ public class OrderHeader {
 	private void initializeOrderData(List<String> columnList, List<String> valueList) {
 		int index = 0;
 		for (String sTableColumn : columnList){			
+			String value = LiveDataUtils.removeUnwantedCharacters(valueList.get(index));
 			
 			switch (sTableColumn) {
 			case LiveDataConsts.OMS_ORDER_HEADER_KEY:				
-				orderHK = valueList.get(index);
+				orderHK = value;
 				break;
 			
 			case LiveDataConsts.OMS_ORDER_NO:				
-				orderNo = valueList.get(index);
+				orderNo = value;
 				break;
 				
 			case LiveDataConsts.OMS_DOC_TYPE:				
-				documentType = valueList.get(index);
+				documentType = value;
 				break;	
 			
 			case LiveDataConsts.OMS_CURRENCY:				
-				currency = valueList.get(index);
+				currency = value;
 				break;
 			
 			case LiveDataConsts.OMS_BILLTO_ID:				
-				billToID = valueList.get(index);
+				billToID = value;
 				break;
 			
 			case LiveDataConsts.OMS_REQ_DELIVERY_DATE:				
-				reqDeliveryDate = valueList.get(index);
+				reqDeliveryDate = value;
 				break;
 			
 			case LiveDataConsts.OMS_REQ_SHIP_DATE:				
-				reqShipDate = valueList.get(index);
+				reqShipDate = value;
 				break;
-			case LiveDataConsts.OMS_SELLEER_ORG:				
-				sellerOrg = valueList.get(index);
-				break;
-			case LiveDataConsts.OMS_SHIP_ID:				
-				shipToID = valueList.get(index);
-				break;			
 			
+			case LiveDataConsts.OMS_SELLEER_ORG:				
+				sellerOrg = value;
+				break;
+			
+			case LiveDataConsts.OMS_SHIP_ID:				
+				shipToID = value;
+				break;
+			
+			case LiveDataConsts.OMS_ORDER_DATE:				
+				orderDate = value;
+				break;
+				
+			case LiveDataConsts.OMS_TOTAL_AMT:				
+				totalAmount = value;
+				break;
+				
 			default:
 				break;
 			}			
@@ -147,5 +160,13 @@ public class OrderHeader {
 		this.shipToID = shipToID;
 	}
 
+	
+	public String getTotalAmount() {
+		return totalAmount;
+	}
+
+	public void setTotalAmount(String totalAmount) {
+		this.totalAmount = totalAmount;
+	}
 	
 }
