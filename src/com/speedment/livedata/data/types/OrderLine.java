@@ -82,7 +82,7 @@ public class OrderLine {
 					shipToID = value;
 					break;
 					
-				case LiveDataConsts.OMS_SHIP_NODE:				
+				case LiveDataConsts.OMS_SHIP_NODE_KEY:				
 					shipNode = value;
 					break;	
 					
