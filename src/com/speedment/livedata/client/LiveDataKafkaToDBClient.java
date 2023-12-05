@@ -1127,7 +1127,15 @@ public class LiveDataKafkaToDBClient {
 	protected String getSCISTenantId() {
 		return (String) getProperty("speedment.consumer.cloudobjectstorage.tenantId");
 	}
+	
+	protected boolean saveCOSDataToFile() {
+		return ((Boolean)Boolean.valueOf((String)getProperty("speedment.consumer.cloudobjectstorage.saveToFile")));
+	}
 
+	protected String getCosLocalFileLocation() {
+		return (String) getProperty("speedment.consumer.cloudobjectstorage.fileLocation");
+	}
+	
 	/*
 	public static void main(String[] args)
 	{

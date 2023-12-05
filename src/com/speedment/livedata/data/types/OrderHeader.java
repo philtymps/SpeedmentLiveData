@@ -1,6 +1,7 @@
 package com.speedment.livedata.data.types;
 
 import java.util.List;
+import org.json.JSONObject;
 
 import com.speedment.livedata.global.LiveDataConsts;
 import com.speedment.livedata.global.LiveDataUtils;
@@ -17,11 +18,13 @@ public class OrderHeader {
 	private String sellerOrg;
 	private String shipToID;
 	private String totalAmount;
+	private JSONObject orderJSON;
 
-	public OrderHeader(List<String> columnList, List<String> valueList) {
+	public OrderHeader(List<String> columnList, List<String> valueList) throws Exception {
 		initializeOrderData(columnList, valueList);
+		generateJsonData();
 	}
-	
+
 	private void initializeOrderData(List<String> columnList, List<String> valueList) {
 		int index = 0;
 		for (String sTableColumn : columnList){			
@@ -78,6 +81,41 @@ public class OrderHeader {
 			index++;	
 		}	
 		
+	}
+	
+	private void generateJsonData() throws Exception {
+		orderJSON = LiveDataUtils.createRootJsonForCOS(LiveDataConsts.SCIS_TYPE_ORDER);
+		JSONObject businessObject = orderJSON
+				.getJSONObject(LiveDataConsts.SCIS_EVENT_DETAILS)
+				.getJSONObject(LiveDataConsts.SCIS_BUSINESS_OBJECT); 
+
+		businessObject.put(LiveDataConsts.SCIS_CREATED_DATE, getOrderDate());
+		businessObject.put(LiveDataConsts.SCIS_ORDER_VALUE_CURRENCY, getCurrency());
+		businessObject.put(LiveDataConsts.SCIS_PLANNED_DEL_DATE, getReqDeliveryDate());
+		businessObject.put(LiveDataConsts.SCIS_PLANNED_SHIP_DATE, getReqShipDate());
+		businessObject.put(LiveDataConsts.SCIS_REQ_DELIVERY_DATE, getReqDeliveryDate());
+		businessObject.put(LiveDataConsts.SCIS_REQ_SHIP_DATE, getReqShipDate());
+		businessObject.put(LiveDataConsts.SCIS_TOTAL_VALUE, getTotalAmount());
+
+		businessObject.put(LiveDataConsts.SCIS_BUYER, 
+				LiveDataUtils.createGlobalIdentifier(getBillToID()));
+				
+		businessObject.put(LiveDataConsts.SCIS_SHIP_FROM_INSTR_LOCATION, 
+				LiveDataUtils.createGlobalIdentifier(getSellerOrg()));
+
+		businessObject.put(LiveDataConsts.SCIS_VENDOR, 
+				LiveDataUtils.createGlobalIdentifier(getSellerOrg()));
+
+		businessObject.put(LiveDataConsts.SCIS_SHIP_TO_LOCATION, 
+				LiveDataUtils.createGlobalIdentifier(getShipToID()));
+
+		String orderNo = LiveDataUtils.removeUnwantedCharacters(getOrderNo());
+		String orderType = LiveDataUtils.removeUnwantedCharacters(getDocumentType());
+		LiveDataUtils.createRootGlobalIdentifier(businessObject, 
+				LiveDataUtils.getOrderNumber(orderNo, orderType));
+
+		businessObject.put(LiveDataConsts.SCIS_ORDER_IDENTIFIER, orderNo);
+		businessObject.put(LiveDataConsts.SCIS_ORDER_TYPE, LiveDataUtils.getOrderType(orderType));
 	}
 	
 	public String getOrderHK() {
@@ -167,6 +205,10 @@ public class OrderHeader {
 
 	public void setTotalAmount(String totalAmount) {
 		this.totalAmount = totalAmount;
+	}
+
+	public JSONObject getOrderJSON() {
+		return orderJSON;
 	}
 	
 }

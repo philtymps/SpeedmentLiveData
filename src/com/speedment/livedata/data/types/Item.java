@@ -2,6 +2,9 @@ package com.speedment.livedata.data.types;
 
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.speedment.livedata.global.LiveDataConsts;
 import com.speedment.livedata.global.LiveDataUtils;
 
@@ -15,11 +18,13 @@ public class Item {
 	String defaultProdClass;	
 	String orgCode;
 	String uom;
-	
-	public Item(List<String> columnList, List<String> valueList) {
+	JSONObject itemJSON;
+
+	public Item(List<String> columnList, List<String> valueList) throws Exception {
 		initializeOrderData(columnList, valueList);
+		generateItemJSON();
 	}
-	
+
 	private void initializeOrderData(List<String> columnList, List<String> valueList) {
 		int index = 0;
 		for (String sTableColumn : columnList){			
@@ -64,6 +69,43 @@ public class Item {
 		}	
 		
 	}
+	
+	
+	private void generateItemJSON() throws Exception {
+		
+		itemJSON = LiveDataUtils.createRootJsonForCOS(LiveDataConsts.COS_PRODUCT_LWR);
+		JSONObject businessObject = itemJSON
+					.getJSONObject(LiveDataConsts.SCIS_EVENT_DETAILS)
+					.getJSONObject(LiveDataConsts.SCIS_BUSINESS_OBJECT); 
+			
+		businessObject.put(LiveDataConsts.SCIS_BRAND, 
+					LiveDataUtils.createGlobalIdentifier(getOrgCode()));
+			
+		businessObject.put(LiveDataConsts.SCIS_CATEGORY, 
+					LiveDataUtils.createGlobalIdentifier(getDefaultProdClass()));
+			
+		businessObject.put(LiveDataConsts.SCIS_DEFAULT_QTY_UNIT, getUom());
+		businessObject.put(LiveDataConsts.SCIS_ITEM_DESC, getDescription());
+		businessObject.put(LiveDataConsts.SCIS_FAMILY, 
+					LiveDataUtils.createGlobalIdentifier(getDefaultProdClass()));
+			
+		LiveDataUtils.createRootGlobalIdentifier(businessObject, getItemID());
+			
+		businessObject.put(LiveDataConsts.SCIS_LINE, 
+					LiveDataUtils.createGlobalIdentifier(getDefaultProdClass()));
+			
+		businessObject.put(LiveDataConsts.SCIS_NAME, getShortDescription());
+		businessObject.put(LiveDataConsts.SCIS_PART_NO, getItemID());
+		businessObject.put(LiveDataConsts.SCIS_PLANNER_CODE, getDefaultProdClass());
+		businessObject.put(LiveDataConsts.SCIS_PROD_TYPE, LiveDataConsts.COS_PRODUCT);
+		businessObject.put(LiveDataConsts.SCIS_SOURCE_LINK, 
+					getImageLocation().concat("/").concat(getImageID()));
+		businessObject.put(LiveDataConsts.SCIS_STATUS, LiveDataConsts.COS_ACTIVE);
+		businessObject.put(LiveDataConsts.SCIS_VALUE, "0.00");
+		businessObject.put(LiveDataConsts.SCIS_VALUE_CURRENCY, "USD");
+		
+	}
+
 	
 	public String getOrgCode() {
 		return orgCode;
@@ -116,5 +158,13 @@ public class Item {
 
 	public void setUom(String uom) {
 		this.uom = uom;
+	}
+	
+	public JSONObject getItemJSON() {
+		return itemJSON;
+	}
+
+	public void setItemJSON(JSONObject itesmJSON) {
+		this.itemJSON = itesmJSON;
 	}
 }

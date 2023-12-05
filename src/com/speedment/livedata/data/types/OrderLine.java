@@ -1,10 +1,11 @@
 package com.speedment.livedata.data.types;
 
 import java.util.List;
-
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import com.speedment.livedata.global.LiveDataConsts;
 import com.speedment.livedata.global.LiveDataUtils;
-
 
 public class OrderLine {
 
@@ -22,12 +23,14 @@ public class OrderLine {
 	private String shipNode;
 	private String shipToID;
 	private String lineTotal;
+	private JSONObject lineRootJSON;
+	private JSONObject lineDataJSON;
 
-	
-	public OrderLine(List<String> columnList, List<String> valueList) {
+	public OrderLine(List<String> columnList, List<String> valueList) throws Exception {
 		initializeOrderLineData(columnList, valueList);
+		generateLineJsonObject();
 	}
-	
+
 	private void initializeOrderLineData(List<String> columnList, List<String> valueList) {
 		int index = 0;
 		for (String sTableColumn : columnList){			
@@ -95,6 +98,57 @@ public class OrderLine {
 			}			
 			index++;	
 		}
+	}
+
+	
+	private void generateLineJsonObject() throws Exception {
+			
+			lineRootJSON = LiveDataUtils.createRootJsonForCOS(LiveDataConsts.SCIS_TYPE_ORDER);
+			JSONObject businessObject = lineRootJSON
+					.getJSONObject(LiveDataConsts.SCIS_EVENT_DETAILS)
+					.getJSONObject(LiveDataConsts.SCIS_BUSINESS_OBJECT); 
+
+			lineDataJSON = new JSONObject();
+			businessObject.put(LiveDataConsts.SCIS_ORDER_LINES, new JSONArray().put(lineDataJSON));
+			
+			//appending line data
+			lineDataJSON.put(LiveDataConsts.SCIS_ORDER_LINE_NO, getPrimeLineNO());				
+			lineDataJSON.put(LiveDataConsts.SCIS_REQ_DELIVERY_DATE, getReqDeliveryDate());
+			lineDataJSON.put(LiveDataConsts.SCIS_REQ_SHIP_DATE, getReqShipDate());
+			lineDataJSON.put(LiveDataConsts.SCIS_PRODUCT_VALUE,getUnitPrice());				
+			lineDataJSON.put(LiveDataConsts.SCIS_QUANTITY, getOrderedQty());				
+			lineDataJSON.put(LiveDataConsts.SCIS_QUANTITY_UNITS, getUom());				
+			lineDataJSON.put(LiveDataConsts.SCIS_PLANNED_DEL_DATE, getEarliestDeliveryDate());				
+			lineDataJSON.put(LiveDataConsts.SCIS_PLANNED_SHIP_DATE, getEarliestShipDate());
+			lineDataJSON.put(LiveDataConsts.SCIS_VALUE, getLineTotal());
+			
+			lineDataJSON.put(LiveDataConsts.SCIS_PRODUCT, 
+					LiveDataUtils.createGlobalIdentifier(getItemID()));
+			
+			lineDataJSON.put(LiveDataConsts.SCIS_SHIP_FROM_INSTR_LOCATION, 
+					LiveDataUtils.createGlobalIdentifier(getShipNode()));
+					
+			lineDataJSON.put(LiveDataConsts.SCIS_SHIP_TO_LOCATION, 
+					LiveDataUtils.createGlobalIdentifier(getShipToID()));
+		
+	}
+	
+	public void updateLineJSONwithOrderData(OrderHeader orderObj) throws Exception {
+		JSONObject businessObject = lineRootJSON
+				.getJSONObject(LiveDataConsts.SCIS_EVENT_DETAILS)
+				.getJSONObject(LiveDataConsts.SCIS_BUSINESS_OBJECT); 
+		
+		businessObject.put(LiveDataConsts.SCIS_ORDER_TYPE, LiveDataUtils.getOrderType(orderObj.getDocumentType()));
+		businessObject.put(LiveDataConsts.SCIS_ORDER_IDENTIFIER, orderObj.getOrderNo());
+		LiveDataUtils.createRootGlobalIdentifier(businessObject, 
+						LiveDataUtils.getOrderNumber(orderObj.getOrderNo(), orderObj.getDocumentType()));
+				
+		LiveDataUtils.createRootGlobalIdentifier(businessObject, 
+						LiveDataUtils.getOrderNumber(orderObj.getOrderNo(), orderObj.getDocumentType()));
+				
+				//line related order data
+		lineDataJSON.put(LiveDataConsts.SCIS_CREATED_DATE, orderObj.getOrderDate());
+		lineDataJSON.put(LiveDataConsts.SCIS_VALUE_CURRENCY, orderObj.getCurrency());
 	}
 	
 	public String getPrimeLineNO() {
@@ -207,6 +261,22 @@ public class OrderLine {
 
 	public void setOrderHeaderKey(String orderHeaderKey) {
 		this.orderHeaderKey = orderHeaderKey;
+	}
+	
+	public JSONObject getLineRootJSON() {
+		return lineRootJSON;
+	}
+
+	public void setLineRootJSON(JSONObject lineRootJSON) {
+		this.lineRootJSON = lineRootJSON;
+	}
+
+	public JSONObject getLineDataJSON() {
+		return lineDataJSON;
+	}
+
+	public void setLineDataJSON(JSONObject lineDataJSON) {
+		this.lineDataJSON = lineDataJSON;
 	}
 
 }
