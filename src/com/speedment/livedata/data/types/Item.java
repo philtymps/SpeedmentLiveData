@@ -1,5 +1,7 @@
 package com.speedment.livedata.data.types;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 
 import org.json.JSONException;
@@ -25,21 +27,22 @@ public class Item {
 		generateItemJSON();
 	}
 
-	private void initializeOrderData(List<String> columnList, List<String> valueList) {
+	private void initializeOrderData(List<String> columnList, List<String> valueList) throws Exception {
 		int index = 0;
 		for (String sTableColumn : columnList){			
-			String value = LiveDataUtils.removeUnwantedCharacters(valueList.get(index));
+			String value = LiveDataUtils.removeUnwantedCharacters(
+					valueList.get(index), LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
 			
 			switch (sTableColumn) {
 				case LiveDataConsts.OMS_ITEM_ID:				
 					itemID = value;
 					break;
 				case LiveDataConsts.OMS_DESCRIPTION:				
-					description = value;
+					description = URLDecoder.decode(value, "UTF-8");
 					break;
 				
 				case LiveDataConsts.OMS_SHORT_DESC:				
-					shortDescription = value;
+					shortDescription = URLDecoder.decode(value, "UTF-8");
 					break;
 					
 				case LiveDataConsts.OMS_IMAGE_LOCATION:				

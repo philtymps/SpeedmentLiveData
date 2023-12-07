@@ -2,24 +2,16 @@ package com.speedment.livedata.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-
 import com.ibm.cloud.objectstorage.ClientConfiguration;
 import com.ibm.cloud.objectstorage.auth.AWSCredentials;
 import com.ibm.cloud.objectstorage.auth.AWSStaticCredentialsProvider;
@@ -31,10 +23,7 @@ import com.ibm.cloud.objectstorage.services.s3.model.ObjectMetadata;
 import com.ibm.cloud.objectstorage.services.s3.model.ObjectTagging;
 import com.ibm.cloud.objectstorage.services.s3.model.PutObjectRequest;
 import com.ibm.cloud.objectstorage.services.s3.model.Tag;
-import com.speedment.livedata.data.types.Item;
-import com.speedment.livedata.data.types.OrderHeader;
-import com.speedment.livedata.data.types.OrderLine;
-import com.speedment.livedata.data.types.Organization;
+import com.speedment.livedata.data.types.*;
 import com.speedment.livedata.global.LiveDataConsts;
 import com.speedment.livedata.global.LiveDataUtils;
 
@@ -52,8 +41,8 @@ public class LiveDataKafkaToCOSRunner {
    	private HashMap<String, OrderHeader> orderHeaderMp = null;
    	private LiveDataKafkaToDBClient ktdClient = null;
    	private List<OrderLine> orderLinesList = null;
-   	private List<Item> itemsList = null;
-   	private List<Organization> orgList = null;
+   	private List<Organization> shipNodeList = null;
+   	private HashMap<String, PersonInfo>  personInfoMp = null;
    	
    	private Logger logger = Logger.getLogger(LiveDataKafkaToCOSRunner.class);
    	
@@ -64,6 +53,7 @@ public class LiveDataKafkaToCOSRunner {
    	
     public void publishCOSDataToCloud() throws Exception {	
     	createJsonFromLineData();
+    	createJsonFromShipNodeData();
     	if(cosInputMap !=null) {
     		cosInputMap.forEach((k,v) ->
 	    		{
@@ -79,6 +69,7 @@ public class LiveDataKafkaToCOSRunner {
     	cosInputMap = null;
     	orderHeaderMp = null;
     	orderLinesList = null;
+    	shipNodeList = null;
 	} 
 
 	public boolean processCOSDataRecord(String sTableName, String sTableColumns, 
@@ -88,7 +79,6 @@ public class LiveDataKafkaToCOSRunner {
 		
 	  	//System.out.println(sTableName);
 
-	  	//TODO: need to add more tables to list
 		switch (sTableName) {			
 			case LiveDataConsts.OMS_TABLE_ORDER_HEADER:
 				updateOrderHeaderDataInMap(lstTableColumns, lstTableValues);
@@ -104,7 +94,11 @@ public class LiveDataKafkaToCOSRunner {
 				break;
 				
 			case LiveDataConsts.OMS_TABLE_SHIP_NODE:
-				appendDataToCOSMap(new Organization(lstTableColumns, lstTableValues).getOrgJSON(), LiveDataConsts.COS_CORG);
+				shipNodeList.add(new Organization(lstTableColumns, lstTableValues));
+				break;
+				
+			case LiveDataConsts.OMS_PERSON_INFO:
+				updateOrderPersonInfoMap(lstTableColumns, lstTableValues);
 				break;
 			
 			default:
@@ -119,7 +113,8 @@ public class LiveDataKafkaToCOSRunner {
    		for (String sTableColumn : lstTableColumns){			
 			if(LiveDataConsts.OMS_ORDER_HEADER_KEY.equals(sTableColumn)) {
 				OrderHeader orderHeaderObj = new OrderHeader(lstTableColumns, lstTableValues);
-				String orderHK = LiveDataUtils.removeUnwantedCharacters(lstTableValues.get(iTableValuesOffset));
+				String orderHK = LiveDataUtils.removeUnwantedCharacters(
+						lstTableValues.get(iTableValuesOffset), LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
 				
 				orderHeaderMp.put(orderHK, orderHeaderObj);				
 				appendDataToCOSMap(orderHeaderObj.getOrderJSON(), LiveDataConsts.COS_ORDER_HEADER);
@@ -128,14 +123,49 @@ public class LiveDataKafkaToCOSRunner {
 			iTableValuesOffset++;	
 		}		
 	}
+   	
+   	public void updateOrderPersonInfoMap(List<String> lstTableColumns, List<String> lstTableValues) throws Exception {		
+   		int iTableValuesOffset = 0;
+   		for (String sTableColumn : lstTableColumns){			
+			if(LiveDataConsts.OMS_PERSON_INFO_KEY.equals(sTableColumn)) {
+				PersonInfo personInfoObj = new PersonInfo(lstTableColumns, lstTableValues);
+				
+				String personInfoKey = LiveDataUtils.removeUnwantedCharacters(
+						lstTableValues.get(iTableValuesOffset), LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
+				
+				personInfoMp.put(personInfoKey, personInfoObj);				
+				appendDataToCOSMap(personInfoObj.getPersonInfoJSON(), LiveDataConsts.COS_CONTACT);
+				break;
+			}
+			iTableValuesOffset++;	
+		}		
+	}
 
    	public void createJsonFromLineData() throws Exception {   				
-   		for(OrderLine orderLineObj: orderLinesList) {
-   			//appending order header data
-   			orderLineObj.updateLineJSONwithOrderData(orderHeaderMp.get(orderLineObj.getOrderHeaderKey()));
-			appendDataToCOSMap(orderLineObj.getLineRootJSON(), LiveDataConsts.COS_ORDER_LINE);   					
-   			
+   		if(orderLinesList !=null) {
+   			for(OrderLine orderLineObj: orderLinesList) {
+   	   			//appending order header data
+   	   			orderLineObj.updateLineJSONwithOrderData(orderHeaderMp.get(orderLineObj.getOrderHeaderKey()));
+   				appendDataToCOSMap(orderLineObj.getLineRootJSON(), LiveDataConsts.COS_ORDER_LINE);   					
+   	   			
+   	   		}
    		}		
+	}
+   	
+
+	private void createJsonFromShipNodeData() throws Exception {
+		if(shipNodeList !=null) {
+   			for(Organization orgObj: shipNodeList) {
+   	   			//appending person info
+   				PersonInfo pInfoObj = personInfoMp.get(orgObj.getOrgAddressKey());
+   				if(pInfoObj !=null) {
+   					orgObj.generateOrgJSON(pInfoObj);
+   	   				appendDataToCOSMap(orgObj.getOrgJSON(), LiveDataConsts.COS_CORG);
+   				}  					
+   	   			
+   	   		}
+   		}	
+		
 	}
 
    	private void appendDataToCOSMap(JSONObject jsonData, String dataType) {
@@ -218,8 +248,8 @@ public class LiveDataKafkaToCOSRunner {
 		if(cosInputMap == null) cosInputMap = new HashMap<String, String>();
 		if(orderHeaderMp == null) orderHeaderMp = new HashMap<String, OrderHeader>();
 		if(orderLinesList == null) orderLinesList = new ArrayList<OrderLine>();
-		if(itemsList == null) itemsList = new ArrayList<Item>();
-		if(orgList == null) orgList = new ArrayList<Organization>();
+		if(shipNodeList == null) shipNodeList = new ArrayList<Organization>();
+		if(personInfoMp == null) personInfoMp = new HashMap<String, PersonInfo>();
 		
 	}
 	

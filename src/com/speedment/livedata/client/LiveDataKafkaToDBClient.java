@@ -311,7 +311,7 @@ public class LiveDataKafkaToDBClient {
         	if (ldkToDB.getVerboseFlag())
         		e.printStackTrace();
         } catch (Exception e) {
-        	logger.info (e.getMessage());
+        		e.printStackTrace();
         }
     }
     

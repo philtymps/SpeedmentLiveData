@@ -4,7 +4,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.cloud.objectstorage.util.StringUtils;
+
 public class LiveDataUtils {
+	
+	public static String formatDate(String strDate) {
+		if(!StringUtils.isNullOrEmpty(strDate)) {
+			return strDate.substring(0, 10);
+		}
+		return strDate;
+	}
 	
 	public static String getOrderNumber(String orderNo, String orderType) {
 		if(orderType != null) {
@@ -62,9 +71,9 @@ public class LiveDataUtils {
 		
 	}
 	
-	public static String removeUnwantedCharacters(String attribute) {
+	public static String removeUnwantedCharacters(String attribute, String character, String newChar) {
 		if(attribute != null)
-			return attribute.replaceAll("'","");
+			return attribute.replaceAll(character, newChar);
 		return attribute;
 	}
 	

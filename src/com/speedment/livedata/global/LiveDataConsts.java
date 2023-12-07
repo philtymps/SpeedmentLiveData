@@ -39,6 +39,7 @@ public class LiveDataConsts {
 	public static	final String	OMS_TABLE_ITEM = "YFS_ITEM";
 	public static	final String	OMS_TABLE_SHIP_NODE = "YFS_SHIP_NODE";
 	public static	final String	OMS_TABLE_CUSTOMER = "YFS_CUSTOMER";
+	public static	final String	OMS_PERSON_INFO = "YFS_PERSON_INFO";
 	
 	//list of JSON general data attributes for COS upload
 	public static	final String	SCIS_EVENT_CODE = "eventCode";	
@@ -70,7 +71,8 @@ public class LiveDataConsts {
 	public static	final String	SCIS_REQ_SHIP_DATE = "requestedShipDate";
 	public static	final String	SCIS_SHIP_FROM_INSTR_LOCATION = "shipFromInstructionLocation";
 	public static	final String	SCIS_SHIP_TO_LOCATION = "shipToLocation";
-	public static	final String	SCIS_LOCATION = "location";
+	public static	final String	SCIS_LOCATION = "Location";
+	public static	final String	SCIS_LOCATION_LWER = "location";
 	public static	final String	SCIS_ORG_IDENTIFIER = "organizationIdentifier";
 	public static	final String	SCIS_ORG_TYPE = "orgType";
 	
@@ -98,6 +100,19 @@ public class LiveDataConsts {
 	public static	final String	SCIS_STATUS = "status";
 	public static	final String	SCIS_ITEM_TYPE = "type";
 	public static	final String	SCIS_ITEM_DESC = "description";
+	
+	//SCIS location constants
+	public static	final String	SCIS_ADDRESS1 = "address1";
+	public static	final String	SCIS_CITY = "city";
+	public static	final String	SCIS_COORDINATES = "coordinates";
+	public static	final String	SCIS_COUNTRY = "country";
+	public static	final String	SCIS_GEO = "geo";
+	public static	final String	SCIS_INCLUDE_IN_CORRELATION = "includeInCorrelation";
+	public static	final String	SCIS_LOCATION_IDENTIFIER = "locationIdentifier";
+	public static	final String	SCIS_LOCATION_NAME = "locationName";
+	public static	final String	SCIS_LOCATION_TYPE = "locationType";
+	public static	final String	SCIS_POSTAL_CODE = "postalCode";
+	public static	final String	SCIS_STATE_PROV = "stateProvince";
 	
 	//list of oms order header table columns
 	public static	final String	OMS_BILLTO_ID = "BILL_TO_ID";
@@ -138,6 +153,23 @@ public class LiveDataConsts {
 	
 	//OMS Customer constants
 	public static	final String	OMS_CUSTOMER_ID = "ITEM_ID";
+	
+	//OMS person info constants	
+	public static	final String	OMS_PERSON_INFO_KEY = "PERSON_INFO_KEY";
+	public static	final String	OMS_PERSON_ID = "PERSON_ID";
+	public static	final String	OMS_FIRST_NAME = "FIRST_NAME";
+	public static	final String	OMS_LAST_NAME = "LAST_NAME";
+	public static	final String	OMS_DAY_PHONE = "DAY_PHONE";
+	public static	final String	OMS_MOBILE_PHONE = "MOBILE_PHONE";
+	public static	final String	OMS_ADDR_LINE_1 = "ADDRESS_LINE1";
+	public static	final String	OMS_ADDR_LINE_2 = "ADDRESS_LINE2";
+	public static	final String	OMS_CITY = "CITY";
+	public static	final String	OMS_STATE = "STATE";
+	public static	final String	OMS_ZIP_CODE = "ZIP_CODE";
+	public static	final String	OMS_IS_COMM_ADD = "IS_COMMERCIAL_ADDRESS";
+	public static	final String	OMS_LONGITUDE = "LONGITUDE";
+	public static	final String	OMS_LATITUDE = "LATITUDE";
+	
 		
 	//list of COS related constants
 	public static	final String	COS_ORDER_HEADER = "ORDER_HEADER";
@@ -149,6 +181,12 @@ public class LiveDataConsts {
 	public static	final String	COS_PRODUCT = "PRODUCT";
 	public static	final String	COS_PRODUCT_LWR = "Product";
 	public static	final String	COS_ORGANIZATION = "Organization";
+	public static	final String	COS_CONTACT = "CONTACT";
+	
+	//general constants
+	public static	final String	SINGLE_QUOTE = "'";
+	public static	final String	SINGLE_SPACE = " ";
+	public static	final String	NO_SPACE = "";
 	
 	
 }

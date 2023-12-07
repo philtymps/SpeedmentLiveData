@@ -1,10 +1,13 @@
 package com.speedment.livedata.data.types;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ibm.cloud.objectstorage.util.StringUtils;
 import com.speedment.livedata.global.LiveDataConsts;
 import com.speedment.livedata.global.LiveDataUtils;
 
@@ -13,30 +16,31 @@ public class Organization {
 	String orgID;
 	String orgName;
 	String orgAddressID;
+	String orgAddressKey;
 	String orgType;
 	JSONObject orgJSON;
 
 
 	public Organization(List<String> columnList, List<String> valueList) throws Exception {
 		initializeOrgData(columnList, valueList);
-		generateOrgJSON();
 	}
-
-	private void initializeOrgData(List<String> columnList, List<String> valueList) {
+	
+	private void initializeOrgData(List<String> columnList, List<String> valueList) throws Exception {
 		int index = 0;
 		for (String sTableColumn : columnList){			
-			String value = LiveDataUtils.removeUnwantedCharacters(valueList.get(index));
+			String value = LiveDataUtils.removeUnwantedCharacters(
+					valueList.get(index), LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
 			
 			switch (sTableColumn) {
 				case LiveDataConsts.OMS_SHIP_NODE_KEY:				
 					orgID = value;
 					break;
 				case LiveDataConsts.OMS_DESCRIPTION:				
-					orgName = value;
+					orgName = URLDecoder.decode(value, "UTF-8");
 					break;
 				
 				case LiveDataConsts.OMS_SHIP_ADDR_KEY:				
-					orgAddressID = value;
+					orgAddressKey = value;
 					break;
 					
 				default:
@@ -48,8 +52,11 @@ public class Organization {
 	}
 	
 	
-	private void generateOrgJSON() throws Exception {
+	public void generateOrgJSON(PersonInfo personInfo) throws Exception {
 		
+		String LocationID = 
+				StringUtils.isNullOrEmpty(personInfo.getPersonID())? personInfo.getFirstName(): personInfo.getPersonID(); 
+						
 		orgJSON = LiveDataUtils.createRootJsonForCOS(LiveDataConsts.COS_ORGANIZATION);
 		JSONObject businessObject = orgJSON
 					.getJSONObject(LiveDataConsts.SCIS_EVENT_DETAILS)
@@ -57,8 +64,8 @@ public class Organization {
 			
 		LiveDataUtils.createRootGlobalIdentifier(businessObject, getOrgID());
 			
-		businessObject.put(LiveDataConsts.SCIS_LOCATION, 
-					LiveDataUtils.createGlobalIdentifier(getOrgAddressID()));
+		businessObject.put(LiveDataConsts.SCIS_LOCATION_LWER, 
+					LiveDataUtils.createGlobalIdentifier(StringUtils.isNullOrEmpty(LocationID)? orgID: LocationID));
 			
 		businessObject.put(LiveDataConsts.SCIS_NAME, getOrgName());
 		businessObject.put(LiveDataConsts.SCIS_ORG_IDENTIFIER, getOrgID());
@@ -98,4 +105,14 @@ public class Organization {
 	public void setOrgJSON(JSONObject orgJSON) {
 		this.orgJSON = orgJSON;
 	}
+	
+
+	public String getOrgAddressKey() {
+		return orgAddressKey;
+	}
+
+	public void setOrgAddressKey(String orgAddressKey) {
+		this.orgAddressKey = orgAddressKey;
+	}
+
 }

@@ -28,7 +28,8 @@ public class OrderHeader {
 	private void initializeOrderData(List<String> columnList, List<String> valueList) {
 		int index = 0;
 		for (String sTableColumn : columnList){			
-			String value = LiveDataUtils.removeUnwantedCharacters(valueList.get(index));
+			String value = LiveDataUtils.removeUnwantedCharacters(
+					valueList.get(index), LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
 			
 			switch (sTableColumn) {
 			case LiveDataConsts.OMS_ORDER_HEADER_KEY:				
@@ -52,11 +53,11 @@ public class OrderHeader {
 				break;
 			
 			case LiveDataConsts.OMS_REQ_DELIVERY_DATE:				
-				reqDeliveryDate = value;
+				reqDeliveryDate = LiveDataUtils.formatDate(value);
 				break;
 			
 			case LiveDataConsts.OMS_REQ_SHIP_DATE:				
-				reqShipDate = value;
+				reqShipDate = LiveDataUtils.formatDate(value);
 				break;
 			
 			case LiveDataConsts.OMS_SELLEER_ORG:				
@@ -68,7 +69,7 @@ public class OrderHeader {
 				break;
 			
 			case LiveDataConsts.OMS_ORDER_DATE:				
-				orderDate = value;
+				orderDate = LiveDataUtils.formatDate(value);
 				break;
 				
 			case LiveDataConsts.OMS_TOTAL_AMT:				
@@ -109,8 +110,12 @@ public class OrderHeader {
 		businessObject.put(LiveDataConsts.SCIS_SHIP_TO_LOCATION, 
 				LiveDataUtils.createGlobalIdentifier(getShipToID()));
 
-		String orderNo = LiveDataUtils.removeUnwantedCharacters(getOrderNo());
-		String orderType = LiveDataUtils.removeUnwantedCharacters(getDocumentType());
+		String orderNo = LiveDataUtils.removeUnwantedCharacters(
+				getOrderNo(),LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
+		
+		String orderType = LiveDataUtils.removeUnwantedCharacters(
+				getDocumentType(), LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
+		
 		LiveDataUtils.createRootGlobalIdentifier(businessObject, 
 				LiveDataUtils.getOrderNumber(orderNo, orderType));
 

@@ -34,7 +34,8 @@ public class OrderLine {
 	private void initializeOrderLineData(List<String> columnList, List<String> valueList) {
 		int index = 0;
 		for (String sTableColumn : columnList){			
-			String value = LiveDataUtils.removeUnwantedCharacters(valueList.get(index));
+			String value = LiveDataUtils.removeUnwantedCharacters(
+					valueList.get(index), LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
 			switch (sTableColumn) {
 				
 				case LiveDataConsts.OMS_ORDER_LINE_KEY:				
@@ -50,11 +51,11 @@ public class OrderLine {
 					break;
 				
 				case LiveDataConsts.OMS_REQ_DELIVERY_DATE:				
-					reqDeliveryDate = value;
+					reqDeliveryDate = LiveDataUtils.formatDate(value);
 					break;
 				
 				case LiveDataConsts.OMS_REQ_SHIP_DATE:				
-					reqShipDate = value;
+					reqShipDate = LiveDataUtils.formatDate(value);
 					break;
 				
 				case LiveDataConsts.OMS_UNIT_PRICE:				
@@ -74,11 +75,11 @@ public class OrderLine {
 					break;
 					
 				case LiveDataConsts.OMS_EARLIEST_DELIVERY_DATE:				
-					earliestDeliveryDate = value;
+					earliestDeliveryDate = LiveDataUtils.formatDate(value);
 					break;
 					
 				case LiveDataConsts.OMS_EARLIEST_SHIP_DATE:				
-					earliestShipDate = value;
+					earliestShipDate = LiveDataUtils.formatDate(value);
 					break;
 					
 				case LiveDataConsts.OMS_SHIP_ID:				
