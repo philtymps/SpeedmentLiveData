@@ -18,5 +18,22 @@
 	<classpathentry kind="lib" path="D:/DIAB94/Runtime/jarall20.1/ycdshared.jar"/>
 	<classpathentry kind="lib" path="D:/DIAB94/Runtime/jarall20.1/scecoreshared.jar"/>
 	<classpathentry kind="lib" path="D:/DIAB94/Runtime/jarall20.1/slf4j-log4j12-1.7.26.jar"/>
+	<classpathentry kind="lib" path="cos-lib/commons-codec-1.11.jar"/>
+	<classpathentry kind="lib" path="cos-lib/commons-logging-1.1.3.jar"/>
+	<classpathentry kind="lib" path="cos-lib/httpclient-4.5.9.jar"/>
+	<classpathentry kind="lib" path="cos-lib/httpcore-4.4.11.jar"/>
+	<classpathentry kind="lib" path="cos-lib/ibm-cos-java-sdk-2.8.0.jar"/>
+	<classpathentry kind="lib" path="cos-lib/ibm-cos-java-sdk-core-2.8.0.jar"/>
+	<classpathentry kind="lib" path="cos-lib/ibm-cos-java-sdk-kms-2.8.0.jar"/>
+	<classpathentry kind="lib" path="cos-lib/ibm-cos-java-sdk-s3-2.8.0.jar"/>
+	<classpathentry kind="lib" path="cos-lib/ion-java-1.2.0.jar"/>
+	<classpathentry kind="lib" path="cos-lib/jackson-annotations-2.10.2.jar"/>
+	<classpathentry kind="lib" path="cos-lib/jackson-core-2.10.2.jar"/>
+	<classpathentry kind="lib" path="cos-lib/jackson-databind-2.10.2.jar"/>
+	<classpathentry kind="lib" path="cos-lib/jackson-dataformat-cbor-2.10.0.jar"/>
+	<classpathentry kind="lib" path="cos-lib/joda-time-2.8.2.jar"/>
+	<classpathentry kind="lib" path="cos-lib/json-20140107.jar"/>
+	<classpathentry kind="lib" path="D:/DIAB221/Runtime/jarall/commons-lang3-3.1.jar"/>
+	<classpathentry kind="lib" path="D:/DIAB221/Runtime/jarall/commons-io-2.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
