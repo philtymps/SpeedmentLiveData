@@ -57,6 +57,9 @@ public class LiveDataKafkaToDBClient {
 	private KafkaConsumer<String, String> m_KafkaConsumer = null;
 	private Connection	m_ConDstDB = null;
 	
+	//COS related variables
+	static LiveDataKafkaToCOSRunner ktcRunner;
+	
 	// logger
 	static Logger logger = Logger.getLogger(com.speedment.livedata.client.LiveDataKafkaToDBClient.class);
 	//static YFCLogCategory logger = YFCLogCategory.instance(LiveDataKafkaToDBClient.class);
@@ -187,6 +190,11 @@ public class LiveDataKafkaToDBClient {
 	        	}
 				ldkToDB.getDSTConnection().setAutoCommit(false);
 			}
+			
+			if(ldkToDB.IsCOSEnabled()) {
+				ktcRunner = new LiveDataKafkaToCOSRunner(ldkToDB);
+			}
+			
             // looping until ctrl-c, the shutdown hook will cleanup on exit
             String							sTableName = null;
             String							sTableColumns = null;
@@ -275,6 +283,7 @@ public class LiveDataKafkaToDBClient {
                     		ldkToDB.commitKafkaConsumer ();
                     }
                 }
+            	
             	if (ldkToDB.getVerboseFlag() && iRecordsProcessed > 0)
             	{
             		logger.info ("Processed " + iRecordsProcessed + " Records Successfullly...");
@@ -293,6 +302,11 @@ public class LiveDataKafkaToDBClient {
             			break;                	
             	}
             }
+        	
+        	if(ldkToDB.IsCOSEnabled()) {
+        		ktcRunner.publishCOSDataToCloud();
+        	}
+        	
         } catch (WakeupException e) {
         	logger.info("Stopped Abnormally..Cleaning up...");
         } catch (NullPointerException e) {
@@ -301,6 +315,7 @@ public class LiveDataKafkaToDBClient {
         } catch (Exception e) {
         	logger.info (e.getClass() + " " + e.getMessage());
         	if (ldkToDB.getVerboseFlag())
+
         		e.printStackTrace();
         }
     }
@@ -508,6 +523,9 @@ public class LiveDataKafkaToDBClient {
     {
     	if (IsDBEnabled())
     		return processDstDataRecordV1 (sTableName, sTableColumns, lstTableColumns, lstTableValues);
+    	
+    	if (IsCOSEnabled())
+    		return ktcRunner.processCOSDataRecord(sTableName, sTableColumns, lstTableColumns, lstTableValues);
     	else
     		return true;
     }
@@ -1095,7 +1113,42 @@ public class LiveDataKafkaToDBClient {
 		this.m_bVerbose = m_bVerbose;
 	}
 
+	private boolean IsCOSEnabled() {
+		return ((Boolean)Boolean.valueOf((String)getProperty("speedment.consumer.cloudobjectstorage.enabled")));
+	}
+	
+	protected String getCosEndPoint() {
+		return (String) getProperty("speedment.consumer.cloudobjectstorage.endPoint");
+	}
+	
+	protected String getCosApiKey() {
+		return (String) getProperty("speedment.consumer.cloudobjectstorage.apiKey");
+	}
+	
+	protected String getCosServiceCRN() {
+		return (String) getProperty("speedment.consumer.cloudobjectstorage.serviceCRN");
+	}
+	
+	protected String getCosBucketName() {
+		return (String) getProperty("speedment.consumer.cloudobjectstorage.bucketName");
+	}
+	
+	protected String getCosBucketLocation() {
+		return (String) getProperty("speedment.consumer.cloudobjectstorage.bucketLocation");
+	}
+	
+	protected String getSCISTenantId() {
+		return (String) getProperty("speedment.consumer.cloudobjectstorage.tenantId");
+	}
+	
+	protected boolean saveCOSDataToFile() {
+		return ((Boolean)Boolean.valueOf((String)getProperty("speedment.consumer.cloudobjectstorage.saveToFile")));
+	}
 
+	protected String getCosLocalFileLocation() {
+		return (String) getProperty("speedment.consumer.cloudobjectstorage.fileLocation");
+	}
+	
 	/*
 	public static void main(String[] args)
 	{
