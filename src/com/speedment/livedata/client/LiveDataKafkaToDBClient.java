@@ -137,7 +137,9 @@ public class LiveDataKafkaToDBClient {
 				System.exit(0);
 			}
 		}
+		String sRecord = "";
 		try {
+			
 			// load the properties file and decrypt database password property 
 			ldkToDB.loadPropertiesFromFile(props);
 			ldkToDB.getProperties().setProperty("speedment.consumer.database.DstDBPassword", ldkEncrypter.decryptIfEncrypted(ldkToDB.getProperties().getProperty("speedment.consumer.database.DstDBPassword")));
@@ -217,7 +219,7 @@ public class LiveDataKafkaToDBClient {
             	ConsumerRecordLoop:
                 for (ConsumerRecord<String, String> record : records)
                 {
-                	String			sRecord = ldkToDB.prepareRecordForSQL (record.value());
+                	sRecord = ldkToDB.prepareRecordForSQL (record.value());
                 	int				iExpectedCount = records.count();
                 	List<String>	lstRecordValues = Arrays.asList (sRecord.split("\\s*,\\s*"));
                 	boolean			bCanCommit = false;
@@ -311,6 +313,9 @@ public class LiveDataKafkaToDBClient {
         	if (ldkToDB.getVerboseFlag())
         		e.printStackTrace();
         } catch (Exception e) {
+        	logger.info (e.getClass() + " " + e.getMessage());
+        	if (ldkToDB.getVerboseFlag())
+
         		e.printStackTrace();
         }
     }
@@ -528,9 +533,9 @@ public class LiveDataKafkaToDBClient {
 	protected boolean	processDstDataRecordV1 (String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstTableValues) throws Exception
 	{
 		boolean	bCanCommit = false;
+		StringBuilder	sSQL = new StringBuilder();
 
 		try {
-			StringBuilder	sSQL = new StringBuilder();
 			boolean			bRecordExists;
 			int				iTableValuesInitialOffset = 0;
 			List<String>	lstURLEncodedColumns = Arrays.asList(((String)getProperty("speedment.urlencoded.columns")).split ("\\s*,\\s*"));
@@ -603,6 +608,14 @@ public class LiveDataKafkaToDBClient {
 		} catch (SQLException e) {
 			logger.info ("Exception in processDstDataRecordV1:" + e.getClass() + " " + e.getMessage());
 			  throw new Exception (e.getMessage());
+		} catch (ArrayIndexOutOfBoundsException e) {
+			logger.info ("Exception in processDstDataRecordV1:" + e.getClass() + " " + e.getMessage());
+			logger.info ("URL Encoding May Be Required for the following Record");
+			logger.info (sTableName + "Table Column Names: " + lstTableColumns.toString());
+			logger.info (sTableName + "Table Column Values: " + lstTableValues.toString());
+			logger.info("SQL Statement: " + sSQL);
+		} catch (Exception e) {
+			logger.info("Exception in processDstDataRecordV1:" + e.getClass() + " " + e.getMessage());
 		}
 		return (bCanCommit);
 	}
