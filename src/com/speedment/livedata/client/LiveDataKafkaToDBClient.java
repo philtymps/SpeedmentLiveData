@@ -204,17 +204,21 @@ public class LiveDataKafkaToDBClient {
             // start our polling loop
         	logger.info ("Beginning Polling of Kafka Topic: " + ldkToDB.getProperty ("speedment.consumer.kafka.topic"));
         	
-        	int				iRecordsProcessed;
+        	int				iRecordsProcessed, iPollingIdle;
         	boolean			bQuitKeyPressed = false;
         	String			sKeyIdentifier = "";
 
+        	iPollingIdle = 0;
         	while (true)
             {
-            	ConsumerRecords<String, String> records = ldkToDB.getKafkaConsumer().poll(10000);
+            	ConsumerRecords<String, String> records = ldkToDB.getKafkaConsumer().poll(LiveDataConsts.LIVEDATA_DEFAULT_POLLING_MILLISECONDS);
             	iRecordsProcessed = 0;
             	
-            	if (records.count() > 0 && ldkToDB.getVerboseFlag())
-            		logger.info ("Polling returned " + records.count() + " records...");
+            	if (records.count() > 0)
+            	{
+            		if (ldkToDB.getVerboseFlag())
+            			logger.info ("Polling returned " + records.count() + " records...");
+            	}
 
             	ConsumerRecordLoop:
                 for (ConsumerRecord<String, String> record : records)
@@ -281,13 +285,28 @@ public class LiveDataKafkaToDBClient {
             			// perform the kafka commit next - at this point database and kafka topic are in synch
             			if (ldkToDB.IsKafkaEnabled())
                     		ldkToDB.commitKafkaConsumer ();
+            			bCanCommit = false;            			
                     }
                 }
-            	if (ldkToDB.getVerboseFlag() && iRecordsProcessed > 0)
+            	if (iRecordsProcessed > 0)
             	{
-            		logger.info ("Processed " + iRecordsProcessed + " Records Successfullly...");
-            		logger.info ("Polling......");
-            	}                
+            		if (ldkToDB.getVerboseFlag()) {
+                		logger.info ("Processed " + iRecordsProcessed + " Records Successfullly...");
+                		logger.info ("Polling......");            			
+            		}
+            		iPollingIdle = 0;
+            	}
+    			// COS only written after all the tables are processed
+            	else if (ldkToDB.IsCOSEnabled() && ++iPollingIdle > LiveDataConsts.LIVEDATA_DEFAULT_POLLINGIDLE)
+    			{
+    				if(ktcRunner.hasDataToPublish())
+    				{
+    	        		ktcRunner.publishCOSDataToCloud();
+    					ktcRunner = new LiveDataKafkaToCOSRunner(ldkToDB);
+    	        	}
+    				iPollingIdle = 0;
+    			}
+            	
     			// it's safe at this point to look for a quit signal
                 if (bQuitKeyPressed || ldkToDB.IsQuitKeyPressed())
                 {
@@ -302,9 +321,6 @@ public class LiveDataKafkaToDBClient {
             	}
             }
         	
-        	if(ldkToDB.IsCOSEnabled()) {
-        		ktcRunner.publishCOSDataToCloud();
-        	}
         	
         } catch (WakeupException e) {
         	logger.info("Stopped Abnormally..Cleaning up...");

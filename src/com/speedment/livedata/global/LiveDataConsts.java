@@ -19,7 +19,11 @@ public class LiveDataConsts {
 	
 	public static	final String	LIVEDATA_DEFAULT_KAFKA_TOPIC = "speedment-topic";
 	public static	final String	LIVEDATA_DEFAULT_KAFKA_SERVERS = "localhost:9092";
-	public	static	int				LIVEDATA_DEFAULT_FETCHLIMIT = 500;
+	public static	int				LIVEDATA_DEFAULT_FETCHLIMIT = 500;
+
+	// POLLING IS CONSIDERED IDLE WHEN WE GET 0 RECORDS FOR 3 CONSECQUTIVE POLLINGS OF THE TOPIC
+	public static	int				LIVEDATA_DEFAULT_POLLINGIDLE = 3;
+	public static	int				LIVEDATA_DEFAULT_POLLING_MILLISECONDS = 10000;
 	
 	public static	final String	LIVEDATA_ENCRYPTER_PREFIX = "encrypted:";
 	

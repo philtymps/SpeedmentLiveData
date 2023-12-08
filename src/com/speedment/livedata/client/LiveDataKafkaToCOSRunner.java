@@ -30,6 +30,7 @@ import com.speedment.livedata.global.LiveDataUtils;
 public class LiveDataKafkaToCOSRunner {
 	
 	//COS variables
+	private boolean bHasDataToPublish = false;
    	private String COS_ENDPOINT = null;
    	private String COS_API_KEY_ID = null;    	
    	private String COS_SERVICE_CRN = null; 
@@ -70,6 +71,7 @@ public class LiveDataKafkaToCOSRunner {
     	orderHeaderMp = null;
     	orderLinesList = null;
     	shipNodeList = null;
+    	bHasDataToPublish = false;
 	} 
 
 	public boolean processCOSDataRecord(String sTableName, String sTableColumns, 
@@ -82,23 +84,28 @@ public class LiveDataKafkaToCOSRunner {
 		switch (sTableName) {			
 			case LiveDataConsts.OMS_TABLE_ORDER_HEADER:
 				updateOrderHeaderDataInMap(lstTableColumns, lstTableValues);
+		    	bHasDataToPublish = true;
 				break;
 				
 			case LiveDataConsts.OMS_TABLE_ORDER_LINE:
 				orderLinesList.add(new OrderLine(lstTableColumns, lstTableValues));				
+		    	bHasDataToPublish = true;
 				break;
 				
-				//for items no other mapping is eneded so we create input to cos data
+				//for items no other mapping is needed so we create input to cos data
 			case LiveDataConsts.OMS_TABLE_ITEM:
 				appendDataToCOSMap(new Item(lstTableColumns, lstTableValues).getItemJSON(), LiveDataConsts.COS_ITEM);
+		    	bHasDataToPublish = true;
 				break;
 				
 			case LiveDataConsts.OMS_TABLE_SHIP_NODE:
 				shipNodeList.add(new Organization(lstTableColumns, lstTableValues));
+		    	bHasDataToPublish = true;
 				break;
 				
 			case LiveDataConsts.OMS_PERSON_INFO:
 				updateOrderPersonInfoMap(lstTableColumns, lstTableValues);
+		    	bHasDataToPublish = true;
 				break;
 			
 			default:
@@ -108,7 +115,12 @@ public class LiveDataKafkaToCOSRunner {
 		return dataProcessed;
 	}
 
-   	public void updateOrderHeaderDataInMap(List<String> lstTableColumns, List<String> lstTableValues) throws Exception {		
+	public boolean hasDataToPublish ()
+	{
+		return bHasDataToPublish;
+	}
+	
+	public void updateOrderHeaderDataInMap(List<String> lstTableColumns, List<String> lstTableValues) throws Exception {		
    		int iTableValuesOffset = 0;
    		for (String sTableColumn : lstTableColumns){			
 			if(LiveDataConsts.OMS_ORDER_HEADER_KEY.equals(sTableColumn)) {
