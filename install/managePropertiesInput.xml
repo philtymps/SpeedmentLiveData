@@ -86,7 +86,7 @@
   </API>
   <API Name="manageProperty">
     <Input>
-      <Property BasePropertyName="speedment.urlencoded.columns" PropertyValue="ITEM_DESCRIPTION,ITEM_SHORT_DESCRIPTION,SHORT_DESCRIPTION,DESCRIPTION,EXTENDED_DESCRIPTION" Category="yfs" PropertyOverride="BASE">
+      <Property BasePropertyName="speedment.urlencoded.columns" PropertyValue="ITEM_DESCRIPTION,ITEM_SHORT_DESCRIPTION,SHORT_DESCRIPTION,DESCRIPTION,EXTENDED_DESCRIPTION,IMAGE_ID,ADDRESS_LINE1,ADDRESS_LINE2,COMPANY,JOB_TITLE,ORGANIZATION_NAME" Category="yfs" PropertyOverride="BASE">
         <PropertyMetadata BasePropertyName="speedment.urlencoded.columns" Category="yfs" Modifiable="Y" ModifiableAtRuntime="Y" Scope="GLOBAL" ServerOverride="N" UserOverride="N"/>
       </Property>
     </Input>
