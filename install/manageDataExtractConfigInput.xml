@@ -53,12 +53,12 @@
   </API>
   <API FlowName="CocDataExtractConfig">
     <Input>
-      <DataExtractConfig Action="ADD" Columns="SHIPNODE_KEY" DataExtractConfigKey="SPEEDMENT-SHIPNODES-10" FirstRunExtractInDays="3650" FrequencyInHours="0" FrequencyInMins="2" TableName="YFS_SHIP_NODE" TaskId="SPEEDMENT-SHIPNODES"/>
+      <DataExtractConfig Action="ADD" Columns="ORGANIZATION_KEY" DataExtractConfigKey="SPEEDMENT-ORGS-10" FirstRunExtractInDays="3650" FrequencyInHours="0" FrequencyInMins="2" TableName="YFS_ORGANIZATION" TaskId="SPEEDMENT-ORGS"/>
     </Input>
   </API>
   <API FlowName="CocDataExtractConfig">
     <Input>
-      <DataExtractConfig Action="ADD" Columns="PERSON_INFO_KEY" DataExtractConfigKey="SPEEDMENT-SHIPNODES-20" FirstRunExtractInDays="3650" FrequencyInHours="0" FrequencyInMins="2" TableName="YFS_PERSON_INFO" TaskId="SPEEDMENT-SHIPNODES"/>
+      <DataExtractConfig Action="ADD" Columns="PERSON_INFO_KEY" DataExtractConfigKey="SPEEDMENT-ORGS-20" FirstRunExtractInDays="3650" FrequencyInHours="0" FrequencyInMins="2" TableName="YFS_PERSON_INFO" TaskId="SPEEDMENT-ORGS"/>
     </Input>
   </API>
 </MultiApi>
