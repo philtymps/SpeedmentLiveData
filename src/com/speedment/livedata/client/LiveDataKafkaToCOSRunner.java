@@ -42,7 +42,7 @@ public class LiveDataKafkaToCOSRunner {
    	private HashMap<String, OrderHeader> orderHeaderMp = null;
    	private LiveDataKafkaToDBClient ktdClient = null;
    	private List<OrderLine> orderLinesList = null;
-   	private List<Organization> shipNodeList = null;
+   	private List<Organization> organizationList = null;
    	private HashMap<String, PersonInfo>  personInfoMp = null;
    	
    	private Logger logger = Logger.getLogger(LiveDataKafkaToCOSRunner.class);
@@ -70,7 +70,7 @@ public class LiveDataKafkaToCOSRunner {
     	cosInputMap = null;
     	orderHeaderMp = null;
     	orderLinesList = null;
-    	shipNodeList = null;
+    	organizationList = null;
     	bHasDataToPublish = false;
 	} 
 
@@ -98,8 +98,8 @@ public class LiveDataKafkaToCOSRunner {
 		    	bHasDataToPublish = true;
 				break;
 				
-			case LiveDataConsts.OMS_TABLE_SHIP_NODE:
-				shipNodeList.add(new Organization(lstTableColumns, lstTableValues));
+			case LiveDataConsts.OMS_TABLE_ORGANIZATION:
+				organizationList.add(new Organization(lstTableColumns, lstTableValues));
 		    	bHasDataToPublish = true;
 				break;
 				
@@ -166,8 +166,8 @@ public class LiveDataKafkaToCOSRunner {
    	
 
 	private void createJsonFromShipNodeData() throws Exception {
-		if(shipNodeList !=null) {
-   			for(Organization orgObj: shipNodeList) {
+		if(organizationList !=null) {
+   			for(Organization orgObj: organizationList) {
    	   			//appending person info
    				PersonInfo pInfoObj = personInfoMp.get(orgObj.getOrgAddressKey());
    				if(pInfoObj !=null) {
@@ -260,7 +260,7 @@ public class LiveDataKafkaToCOSRunner {
 		if(cosInputMap == null) cosInputMap = new HashMap<String, String>();
 		if(orderHeaderMp == null) orderHeaderMp = new HashMap<String, OrderHeader>();
 		if(orderLinesList == null) orderLinesList = new ArrayList<OrderLine>();
-		if(shipNodeList == null) shipNodeList = new ArrayList<Organization>();
+		if(organizationList == null) organizationList = new ArrayList<Organization>();
 		if(personInfoMp == null) personInfoMp = new HashMap<String, PersonInfo>();
 		
 	}

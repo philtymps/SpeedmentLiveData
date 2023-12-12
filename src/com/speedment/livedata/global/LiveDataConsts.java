@@ -44,6 +44,7 @@ public class LiveDataConsts {
 	public static	final String	OMS_TABLE_SHIP_NODE = "YFS_SHIP_NODE";
 	public static	final String	OMS_TABLE_CUSTOMER = "YFS_CUSTOMER";
 	public static	final String	OMS_PERSON_INFO = "YFS_PERSON_INFO";
+	public static	final String	OMS_TABLE_ORGANIZATION = "YFS_ORGANIZATION";
 	
 	//list of JSON general data attributes for COS upload
 	public static	final String	SCIS_EVENT_CODE = "eventCode";	
@@ -174,6 +175,10 @@ public class LiveDataConsts {
 	public static	final String	OMS_LONGITUDE = "LONGITUDE";
 	public static	final String	OMS_LATITUDE = "LATITUDE";
 	
+	//oms organization constants
+	public static	final String	OMS_ORGANIZATION_KEY= "ORGANIZATION_KEY";
+	public static	final String	OMS_ORGANIZATION_NAME= "ORGANIZATION_NAME";
+	public static	final String	OMS_CORPORATE_ADDRESS_KEY = "CORPORATE_ADDRESS_KEY";
 		
 	//list of COS related constants
 	public static	final String	COS_ORDER_HEADER = "ORDER_HEADER";

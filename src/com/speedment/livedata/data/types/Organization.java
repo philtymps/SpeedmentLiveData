@@ -32,14 +32,14 @@ public class Organization {
 					valueList.get(index), LiveDataConsts.SINGLE_QUOTE, LiveDataConsts.NO_SPACE);
 			
 			switch (sTableColumn) {
-				case LiveDataConsts.OMS_SHIP_NODE_KEY:				
+				case LiveDataConsts.OMS_ORGANIZATION_CODE:				
 					orgID = value;
 					break;
-				case LiveDataConsts.OMS_DESCRIPTION:				
+				case LiveDataConsts.OMS_ORGANIZATION_NAME:				
 					orgName = URLDecoder.decode(value, "UTF-8");
 					break;
 				
-				case LiveDataConsts.OMS_SHIP_ADDR_KEY:				
+				case LiveDataConsts.OMS_CORPORATE_ADDRESS_KEY:				
 					orgAddressKey = value;
 					break;
 					
