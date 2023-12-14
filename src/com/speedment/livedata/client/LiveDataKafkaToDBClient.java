@@ -257,6 +257,10 @@ public class LiveDataKafkaToDBClient {
             		{
             			if (ldkToDB.IsDBEnabled())
             				bCanCommit = ldkToDB.processResetMessage (lstRecordValues);
+                		if (ldkToDB.IsCOSEnabled())
+                		{
+                			ktcRunner = new LiveDataKafkaToCOSRunner(ldkToDB);
+                		}
             		}
                 	else if (sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_PUBLISH_IDENTIFIER))
             		{
