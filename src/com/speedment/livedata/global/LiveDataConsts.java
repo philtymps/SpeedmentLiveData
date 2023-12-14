@@ -6,6 +6,7 @@ public class LiveDataConsts {
 	public	static	final String	LIVEDATA_BEGINTABLE_IDENTIFIER = "--BEGINTABLE--";
 	public	static	final String	LIVEDATA_ENDTABLE_IDENTIFIER = "--ENDTABLE--";
 	public	static	final String	LIVEDATA_RESET_IDENTIFIER = "SPEEDMENT-RESET";
+	public	static	final String	LIVEDATA_PUBLISH_IDENTIFIER = "SPEEDMENT-PUBLISH";
 	public	static	final String	LIVEDATA_TABLE_PROPERTIES_FILE_NAME = "speedment-tables.properties";
 	public	static	final String	LIVEDATA_CUSTOMER_OVERRIDES = "/customer_overrides.properties";
 	
@@ -34,6 +35,7 @@ public class LiveDataConsts {
 	public 	static	String			LIVEDATA_SUCCESS = "SUCCESS";
 	public	static	String			LIVEDATA_FAILED  = "FAILED";
 	public	static	String			LIVEDATA_RESET   = "RESET";
+	public	static	String			LIVADATA_PUBLISH = "PUBLISH";
 	
 	public static	final String 	LIVEDATA_PRODUCER_FILE_NAME = "speedment-livedata-producer.properties";
 

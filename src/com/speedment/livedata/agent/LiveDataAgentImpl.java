@@ -93,6 +93,8 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			  logger.debug (YFCDocument.getDocumentFor (inXML).getString());
 			  debugProperties();
 		  }
+		  // System.out.println ("Input to getJobs:");
+		  // System.out.println (YFCDocument.getDocumentFor (inXML).getString());
 
 		  if (lastMessageXml != null  || IsTaskPendingOrRunning (env, getAgentParameter("TaskId", inXML)))
 			  return null;
@@ -103,6 +105,11 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			if (((String)getProperty("TaskId")).contains ("RESET"))
 			{
 				resetRunningOrPendingJobs (env, YFCDocument.getDocumentFor(inXML).getDocumentElement());
+				return null;
+			}
+			if (((String)getProperty("TaskId")).contains ("PUBLISH"))
+			{
+				publishToSCIS (env, YFCDocument.getDocumentFor(inXML).getDocumentElement());
 				return null;
 			}
 
@@ -171,6 +178,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 				logger.info ("Exception in getJobs() Method:");
 				logger.info ("Exception Class: " + e.getClass() + ": " + e.getMessage());
 			}
+			// System.out.println ("Exception Class: " + e.getClass() + ": " + e.getMessage());
 			throw new Exception (e.getMessage());
 		}
 		return lstJobs;
@@ -279,8 +287,8 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		} catch (Exception e) {
 			if (IsKafkaEnabled () && m_KafkaProducer != null)
 			{
-				if (getInKafkaTransaction())
-					getKafkaProducer().abortTransaction();
+				//if (getInKafkaTransaction())
+				//	getKafkaProducer().abortTransaction();
 				getKafkaProducer().close();
 			}
 			// attempt to clean up pending jobs 
@@ -352,8 +360,10 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 
 			StringBuilder sSQL = new StringBuilder("SELECT " + sTableColumns + ",MODIFYTS FROM " + sTableName);
 			sSQL.append(" WHERE MODIFYTS BETWEEN '" + tsBetweenStart.toString() + "' AND '" + tsBetweenEnd.toString() + "' ORDER BY MODIFYTS");
-			if (!YFCObject.isVoid(getProperty ("FetchLimit")))
-				sSQL.append(" FETCH FIRST " + getProperty("FetchLimit") + " ROWS ONLY");
+
+			String sFetchLimit = (String) getProperty("FetchLimit");
+			if (!YFCObject.isVoid(sFetchLimit) && Integer.valueOf(sFetchLimit) > 0)
+				sSQL.append(" FETCH FIRST " + sFetchLimit + " ROWS ONLY");
 			if (IsDebugging())
 			{
 				logger.debug (sCurrentDateTime + ":          Executing Query:" + sSQL);
@@ -875,7 +885,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			}
 			else
 			{
-				if (IsDebugging() && !sTaskId.contains("RESET") && sTaskId != null)
+				if (IsDebugging() && !sTaskId.contains("RESET") && !sTaskId.contains("PUBLISH") && sTaskId != null)
 				 logger.info (sCurrentDateTime + ": No Task Config Records Found for Task: " + sTaskId);
 			}
 			ps.close();
@@ -1118,7 +1128,51 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 		}
 		return;
 	  }
-	  
+
+	  protected void publishToSCIS (YFSEnvironment env, YFCElement eleJobXML) throws Exception
+	  {
+		  
+			String 						sDataToPublish = ((String)getProperty ("DataToPublish"));
+			// System.out.println ("DataToPublish=" + sDataToPublish);
+
+			setInKafkaTransaction(false);
+			eleJobXML.setAttribute("Status", LiveDataConsts.LIVEDATA_SUCCESS);
+			// System.out.println ("In publishToScis() Method:");
+			// if KafkaEnabled send PUBLISH commands to Kafka Topic
+			if (IsKafkaEnabled())
+			{
+				// send SPEEDMENT-PUBLISH to Kafka
+				try {
+						getKafkaProducer().initTransactions();
+						String sRecordToSend = LiveDataConsts.LIVEDATA_PUBLISH_IDENTIFIER + "," + sDataToPublish.toUpperCase();
+
+						// send the following reset message SPEEDMENT-PUBLISH,OBJECTS COMMA SEPARATED
+						getKafkaProducer().beginTransaction();
+						setInKafkaTransaction(true);
+						getKafkaProducer().send(new ProducerRecord<>((String)getProperty("speedment.producer.kafka.topic"), Long.toString(System.currentTimeMillis()), sRecordToSend));
+						getKafkaProducer().commitTransaction();
+						setInKafkaTransaction(false);
+				} catch (ProducerFencedException | OutOfOrderSequenceException | AuthorizationException e) {
+				     // We can't recover from these exceptions, so our only option is to close the producer and exit.
+					 eleJobXML.setAttribute("Status", LiveDataConsts.LIVEDATA_ABORTED);
+					  if (IsDebugging())
+						  	logger.info ("Exception in publishToScis(): " + e.getClass() + " " + e.getMessage());
+						// System.out.println ("Exception in publishToSCIS:" +  e.getClass() + " " + e.getMessage());
+				} catch (Exception e) {
+				     // For all other exceptions, just abort the transaction and try again.
+					if (getInKafkaTransaction())
+							getKafkaProducer().abortTransaction();
+					  if (IsDebugging())
+						  	logger.info ("Exception in publish(): " + e.getClass() + " " + e.getMessage());
+						// System.out.println ("Exception in publishToSCIS:" +  e.getClass() + " " + e.getMessage());
+				} finally {
+					if (!YFCObject.isNull(getKafkaProducer()))
+						getKafkaProducer().close();
+				}
+			}
+		  
+	  }
+
 	  protected	void	cleanupPendingJobs (YFSEnvironment env)
 	  {
 			Connection					conDB = ((YCPContext)env).getDBConnection();
@@ -1249,6 +1303,7 @@ public class LiveDataAgentImpl extends YCPBaseAgent implements YIFCustomApi {
 			getAgentParameter("TasksToResetForFirstRun", inXML, "");
 			getAgentParameter("DBAction", inXML, "NONE");
 			getAgentParameter("MinAtRestSeconds", inXML, "10");
+			getAgentParameter("DataToPublish", inXML, "");
 			
 			getSystemParameter (env, "speedment.urlencoded.columns", "URLEncodedColumns", "");
 			

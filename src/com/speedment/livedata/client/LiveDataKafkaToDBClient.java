@@ -204,11 +204,10 @@ public class LiveDataKafkaToDBClient {
             // start our polling loop
         	logger.info ("Beginning Polling of Kafka Topic: " + ldkToDB.getProperty ("speedment.consumer.kafka.topic"));
         	
-        	int				iRecordsProcessed, iPollingIdle;
+        	int				iRecordsProcessed;
         	boolean			bQuitKeyPressed = false;
         	String			sKeyIdentifier = "";
 
-        	iPollingIdle = 0;
         	while (true)
             {
             	ConsumerRecords<String, String> records = ldkToDB.getKafkaConsumer().poll(LiveDataConsts.LIVEDATA_DEFAULT_POLLING_MILLISECONDS);
@@ -232,7 +231,7 @@ public class LiveDataKafkaToDBClient {
                 	sKeyIdentifier = lstRecordValues.get(0);
                 	  	
                 	if (ldkToDB.IsKeyIdentifier(sKeyIdentifier) && ldkToDB.getVerboseFlag())
-                		logger.info ("Identifier: " + sKeyIdentifier + " State = " + state + " Task Id=" + lstRecordValues.get(1));
+                		logger.info ("Identifier: " + sKeyIdentifier + " State = " + state + " Task Id=" + lstRecordValues.toString());
 
                 	if (state == LiveDataConsts.LIVEDATA_STATE_WRITING_FILE || state == LiveDataConsts.LIVEDATA_STATE_FLUSH_KAFKA)
                 	{
@@ -258,6 +257,18 @@ public class LiveDataKafkaToDBClient {
             		{
             			if (ldkToDB.IsDBEnabled())
             				bCanCommit = ldkToDB.processResetMessage (lstRecordValues);
+            		}
+                	else if (sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_PUBLISH_IDENTIFIER))
+            		{
+                		if (ldkToDB.IsCOSEnabled())
+                		{
+            				if(ktcRunner.hasDataToPublish())
+            				{
+            	        		ktcRunner.publishCOSDataToCloud();
+            					ktcRunner = new LiveDataKafkaToCOSRunner(ldkToDB);
+            	        	}
+                		}
+                		bCanCommit = true;
             		}
                 	else
                 	{
@@ -294,18 +305,7 @@ public class LiveDataKafkaToDBClient {
                 		logger.info ("Processed " + iRecordsProcessed + " Records Successfullly...");
                 		logger.info ("Polling......");            			
             		}
-            		iPollingIdle = 0;
             	}
-    			// COS only written after all the tables are processed
-            	else if (ldkToDB.IsCOSEnabled() && ++iPollingIdle > LiveDataConsts.LIVEDATA_DEFAULT_POLLINGIDLE)
-    			{
-    				if(ktcRunner.hasDataToPublish())
-    				{
-    	        		ktcRunner.publishCOSDataToCloud();
-    					ktcRunner = new LiveDataKafkaToCOSRunner(ldkToDB);
-    	        	}
-    				iPollingIdle = 0;
-    			}
             	
     			// it's safe at this point to look for a quit signal
                 if (bQuitKeyPressed || ldkToDB.IsQuitKeyPressed())
@@ -354,7 +354,7 @@ public class LiveDataKafkaToDBClient {
 
     protected	boolean	IsKeyIdentifier (String sKeyIdentifier)
     {
-    	return (sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_BEGINTABLE_IDENTIFIER) || sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_ENDTABLE_IDENTIFIER) || sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_RESET_IDENTIFIER));
+    	return (sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_BEGINTABLE_IDENTIFIER) || sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_ENDTABLE_IDENTIFIER) || sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_RESET_IDENTIFIER) || sKeyIdentifier.equals(LiveDataConsts.LIVEDATA_PUBLISH_IDENTIFIER));
     }
     protected	boolean	IsKafkaEnabled ()
     {
