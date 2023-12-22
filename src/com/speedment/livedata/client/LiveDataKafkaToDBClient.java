@@ -539,13 +539,14 @@ public class LiveDataKafkaToDBClient {
     
     protected boolean	processDstDataRecord (String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstTableValues) throws Exception
     {
+    	boolean bRet = true;
     	if (IsDBEnabled())
-    		return processDstDataRecordV1 (sTableName, sTableColumns, lstTableColumns, lstTableValues);
+    		bRet = processDstDataRecordV1 (sTableName, sTableColumns, lstTableColumns, lstTableValues);
     	
-    	if (IsCOSEnabled())
-    		return ktcRunner.processCOSDataRecord(sTableName, sTableColumns, lstTableColumns, lstTableValues);
-    	else
-    		return true;
+    	if (bRet && IsCOSEnabled())
+    		bRet = ktcRunner.processCOSDataRecord(sTableName, sTableColumns, lstTableColumns, lstTableValues);
+
+    	return bRet;
     }
     
 	protected boolean	processDstDataRecordV1 (String sTableName, String sTableColumns, List<String> lstTableColumns, List<String> lstTableValues) throws Exception
